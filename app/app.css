@@ -4,7 +4,7 @@ tr {
   border-style: solid;
   border-radius: 20px;
   border-color: wheat;
-  border-width: 2px;
+  border-width: 0.01px;
 }
 
 @theme {
