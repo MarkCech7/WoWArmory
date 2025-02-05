@@ -1,10 +1,18 @@
 @import "tailwindcss";
 
-tr {
+td {
   border-style: solid;
-  border-radius: 20px;
-  border-color: wheat;
-  border-width: 0.01px;
+  border-color: rgba(255, 255, 255, 0.25);
+  border-bottom-width: 1px;
+}
+
+th,
+td {
+  padding: 6px;
+}
+
+tr:first-child td {
+  border-top-width: 1px;
 }
 
 @theme {
@@ -14,25 +22,92 @@ tr {
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  background-image: url(assets/background/background.jpg);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-color: black;
+  background-position: top;
+}
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+.content-background {
+  max-width: 1100px;
+  color: white;
+  background-color: #2b1809;
 }
 
 .race,
 .class,
-.spec {
-  width: 5%;
-  height: 5%;
+.spec,
+.faction {
+  width: 32px;
+  height: 32px;
 }
 
-.tdRace {
+.td-race {
   text-align: center;
 }
 
-.divRace {
+.div-race,
+.div-faction {
   justify-content: center;
   display: flex;
+}
+
+.wins {
+  color: #00ff00;
+}
+
+.losses {
+  color: #db2300;
+}
+
+.rating {
+  color: rgb(192, 160, 125);
+  /*color: #9e3403; */
+  font-weight: 500;
+}
+
+.color-warrior {
+  color: #c69b6d;
+}
+
+.color-paladin {
+  color: #f48cba;
+}
+
+.color-hunter {
+  color: #aad372;
+}
+
+.color-rogue {
+  color: #fff468;
+}
+
+.color-priest {
+  color: #ffffff;
+}
+
+.color-deathknight {
+  color: #c41e3a;
+}
+
+.color-shaman {
+  color: #0070dd;
+}
+
+.color-mage {
+  color: #3fc7eb;
+}
+
+.color-warlock {
+  color: #8788ee;
+}
+
+.color-druid {
+  color: #ff7c0a;
+}
+
+table {
+  table-layout: fixed;
+  width: 100%;
 }

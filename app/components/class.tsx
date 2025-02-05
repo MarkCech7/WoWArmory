@@ -8,6 +8,7 @@ import shaman from "~/assets/class/shaman.webp";
 import mage from "~/assets/class/mage.webp";
 import warlock from "~/assets/class/warlock.webp";
 import druid from "~/assets/class/druid.webp";
+import type { ReactNode } from "react";
 
 export function Class(props: { classId: number }) {
   let src = "";
@@ -55,6 +56,43 @@ export function Class(props: { classId: number }) {
       break;
   }
   return <img className="class" src={src} alt={alt} />;
+}
+
+export function NameColor(props: { classId: number; children: ReactNode }) {
+  let classColor = "";
+  switch (props.classId) {
+    case 1:
+      classColor = "color-warrior";
+      break;
+    case 2:
+      classColor = "color-paladin";
+      break;
+    case 3:
+      classColor = "color-hunter";
+      break;
+    case 4:
+      classColor = "color-rogue";
+      break;
+    case 5:
+      classColor = "color-priest";
+      break;
+    case 6:
+      classColor = "color-deathknight";
+      break;
+    case 7:
+      classColor = "color-shaman";
+      break;
+    case 8:
+      classColor = "color-mage";
+      break;
+    case 9:
+      classColor = "color-warlock";
+      break;
+    case 11:
+      classColor = "color-druid";
+      break;
+  }
+  return <td className={classColor}>{props.children}</td>;
 }
 
 /*classes

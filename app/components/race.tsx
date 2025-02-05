@@ -18,6 +18,8 @@ import belfMale from "~/assets/race/blood-elf-male.webp";
 import belfFemale from "~/assets/race/blood-elf-female.webp";
 import draeneiMale from "~/assets/race/draenei-male.webp";
 import draeneiFemale from "~/assets/race/draenei-female.webp";
+import alliance from "~/assets/faction/alliance.svg";
+import horde from "~/assets/faction/horde.svg";
 
 export function CharRace(props: { raceId: number; gender: number }) {
   let src = "";
@@ -105,6 +107,29 @@ export function CharRace(props: { raceId: number; gender: number }) {
   }
   return <img className="race" src={src} alt={alt} />;
 }
+
+export function Faction(props: { raceId: number }) {
+  let src = "";
+  let alt = "";
+  if (
+    props.raceId === 1 ||
+    props.raceId === 3 ||
+    props.raceId === 4 ||
+    props.raceId === 7 ||
+    props.raceId === 11
+  ) {
+    src = alliance;
+    alt = "Alliance";
+  } else {
+    src = horde;
+    alt = "Horde";
+  }
+  return <img className="faction" src={src} alt={alt} />;
+}
+
+/* faction
+0 - alliance
+1 - horde */
 
 /* gender 
 0 - male 
