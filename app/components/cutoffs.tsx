@@ -13,19 +13,19 @@ export function RankColor(props: { title: string; children: ReactNode }) {
       rankColor = "text-season-glad";
       break;
     case "Gladiator":
-      rankColor = "color-gladiator";
+      rankColor = "text-gladiator";
       break;
     case "Duelist":
-      rankColor = "color-duelist";
+      rankColor = "text-duelist";
       break;
     case "Rival":
-      rankColor = "color-rival";
+      rankColor = "text-rival";
       break;
     case "Challenger":
-      rankColor = "color-challenger";
+      rankColor = "text-challenger";
       break;
     case "No Title":
-      rankColor = "color-unrated";
+      rankColor = "text-unrated";
   }
   return (
     <td className={`${rankColor} relative font-semibold`}>

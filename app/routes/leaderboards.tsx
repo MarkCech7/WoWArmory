@@ -4,7 +4,7 @@ import { redirect, NavLink } from "react-router";
 import { CharRace, Faction } from "~/components/race";
 import { Class, NameColor } from "~/components/class";
 import { Spec } from "~/components/specialization";
-import { RankColor, RankIcon } from "~/components/cuttofs";
+import { RankIcon } from "~/components/cutoffs";
 
 export async function loader({ params }: Route.LoaderArgs) {
   let ladderType: number;
