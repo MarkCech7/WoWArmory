@@ -4,6 +4,7 @@ import { redirect, NavLink } from "react-router";
 import { CharRace, Faction } from "~/components/race";
 import { Class, NameColor } from "~/components/class";
 import { Spec } from "~/components/specialization";
+import { RankColor, RankIcon } from "~/components/cuttofs";
 
 export async function loader({ params }: Route.LoaderArgs) {
   let ladderType: number;
@@ -46,48 +47,54 @@ function LadderNav(props: { ladder?: string }) {
 
 export default function Leaderboard(props: Route.ComponentProps) {
   return (
-    <div className="flex flex-col items-center">
-      <h1>{props.params.type} Arena Ladder</h1>
-      <LadderNav ladder={props.params.type} />
-      <div className="content-background">
-        <table>
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Race</th>
-              <th className="text-left">Player</th>
-              <th>Faction</th>
-              <th>Rating</th>
-              <th>Wins</th>
-              <th>Losses</th>
-            </tr>
-          </thead>
-          <tbody>
-            {props.loaderData.ladder.map((player, index) => (
-              <tr key={index}>
-                <td className="text-center">{player.rank}</td>
-                <td className="td-race">
-                  <div className="div-race">
-                    <CharRace raceId={player.race} gender={player.gender} />
-                    <Class classId={player.class} />
-                    <Spec specId={player.spell} />
-                  </div>
-                </td>
-                <NameColor classId={player.class}>{player.name}</NameColor>
-                <td>
-                  <div className="div-faction">
-                    <Faction raceId={player.race} />
-                  </div>
-                </td>
-                <td className="rating text-center">{player.rating}</td>
-                <td className="wins text-center">{player.seasonWins}</td>
-                <td className="losses text-center">
-                  {player.seasonGames - player.seasonWins}
-                </td>
+    <div className="">
+      <h1 className="text-left">{props.params.type} Arena Ladder</h1>
+      <div className="flex flex-col items-center">
+        <LadderNav ladder={props.params.type} />
+        <div className="content-background">
+          <table>
+            <thead>
+              <tr className="ladder-description">
+                <th>Rank</th>
+                <th>Race</th>
+                <th className="text-left">
+                  <div className="pl-4">Player</div>
+                </th>
+                <th>Faction</th>
+                <th>Rating</th>
+                <th>Wins</th>
+                <th>Losses</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {props.loaderData.ladder.map((player, index) => (
+                <tr key={index}>
+                  <td className="text-center rating">{player.rank}</td>
+                  <td className="td-race">
+                    <div className="div-race">
+                      <CharRace raceId={player.race} gender={player.gender} />
+                      <Class classId={player.class} />
+                      <Spec specId={player.spell} />
+                    </div>
+                  </td>
+                  <NameColor classId={player.class}>
+                    <div className="pl-4">{player.name}</div>
+                  </NameColor>
+                  <td>
+                    <div className="div-faction">
+                      <Faction raceId={player.race} />
+                    </div>
+                  </td>
+                  <RankIcon title={player.title}>{player.rating}</RankIcon>
+                  <td className="wins text-center">{player.seasonWins}</td>
+                  <td className="losses text-center">
+                    {player.seasonGames - player.seasonWins}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

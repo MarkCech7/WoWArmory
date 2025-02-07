@@ -15,30 +15,59 @@ tr:first-child td {
   border-top-width: 1px;
 }
 
+.ladder-description th:not(:first-child) {
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.ladder-description th {
+  color: rgba(255, 255, 255, 0.75);
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --color-class-warrior: #c69b6d;
+  --color-class-paladin: #f48cba;
+  --color-class-hunter: #aad372;
+  --color-class-rogue: #fff468;
+  --color-class-priest: #ffffff;
+  --color-class-deathknight: #c41e3a;
+  --color-class-shaman: #0070dd;
+  --color-class-mage: #3fc7eb;
+  --color-class-warlock: #8788ee;
+  --color-class-druid: #ff7c0a;
+  --color-season-glad: rgb(255 128 0);
+  --color-gladiator: rgb(163 53 238);
+  --color-duelist: rgb(0 112 222);
+  --color-rival: rgb(73, 83, 72);
+  --color-challenger: rgb(111, 89, 70);
+  --color-unrated: rgb();
 }
 
 html,
 body {
   background-image: url(assets/background/background.jpg);
-  background-size: contain;
+  background-size: cover;
   background-repeat: no-repeat;
   background-color: black;
   background-position: top;
+  background-attachment: fixed;
+  padding-bottom: 30px;
 }
 
 .content-background {
   max-width: 1100px;
   color: white;
   background-color: #2b1809;
+  border-radius: 8px;
 }
 
 .race,
 .class,
 .spec,
-.faction {
+.faction,
+.rank-img {
   width: 32px;
   height: 32px;
 }
@@ -62,49 +91,9 @@ body {
 }
 
 .rating {
-  color: rgb(192, 160, 125);
+  color: #b1997f;
   /*color: #9e3403; */
   font-weight: 500;
-}
-
-.color-warrior {
-  color: #c69b6d;
-}
-
-.color-paladin {
-  color: #f48cba;
-}
-
-.color-hunter {
-  color: #aad372;
-}
-
-.color-rogue {
-  color: #fff468;
-}
-
-.color-priest {
-  color: #ffffff;
-}
-
-.color-deathknight {
-  color: #c41e3a;
-}
-
-.color-shaman {
-  color: #0070dd;
-}
-
-.color-mage {
-  color: #3fc7eb;
-}
-
-.color-warlock {
-  color: #8788ee;
-}
-
-.color-druid {
-  color: #ff7c0a;
 }
 
 table {

@@ -62,34 +62,34 @@ export function NameColor(props: { classId: number; children: ReactNode }) {
   let classColor = "";
   switch (props.classId) {
     case 1:
-      classColor = "color-warrior";
+      classColor = "text-class-warrior";
       break;
     case 2:
-      classColor = "color-paladin";
+      classColor = "text-class-paladin";
       break;
     case 3:
-      classColor = "color-hunter";
+      classColor = "text-class-hunter";
       break;
     case 4:
-      classColor = "color-rogue";
+      classColor = "text-class-rogue";
       break;
     case 5:
-      classColor = "color-priest";
+      classColor = "text-class-priest";
       break;
     case 6:
-      classColor = "color-deathknight";
+      classColor = "text-class-deathknight";
       break;
     case 7:
-      classColor = "color-shaman";
+      classColor = "text-class-shaman";
       break;
     case 8:
-      classColor = "color-mage";
+      classColor = "text-class-mage";
       break;
     case 9:
-      classColor = "color-warlock";
+      classColor = "text-class-warlock";
       break;
     case 11:
-      classColor = "color-druid";
+      classColor = "text-class-druid";
       break;
   }
   return <td className={classColor}>{props.children}</td>;
