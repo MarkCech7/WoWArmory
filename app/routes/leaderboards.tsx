@@ -1,13 +1,18 @@
+import type { Route } from "./+types/leaderboards";
 import { loadArenaLadder } from "~/db";
-import type { Route } from "./+types/home";
 import { redirect, NavLink } from "react-router";
 import { CharRace, Faction } from "~/components/race";
 import { Class, NameColor } from "~/components/class";
 import { Spec } from "~/components/specialization";
 import { RankIcon } from "~/components/cutoffs";
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, request }: Route.LoaderArgs) {
   let ladderType: number;
+  let pageParam = new URL(request.url).searchParams.get("page") || "1";
+  let page = parseInt(pageParam);
+  let limit = 10;
+  let offset = (page - 1) * limit;
+
   if (params.type === "2v2") {
     ladderType = 2;
   } else if (params.type === "3v3") {
@@ -15,8 +20,10 @@ export async function loader({ params }: Route.LoaderArgs) {
   } else {
     return redirect("/leaderboards/2v2");
   }
-  let ladder = await loadArenaLadder(ladderType);
-  return { ladder };
+  let ladder = await loadArenaLadder(ladderType, limit, offset);
+  let totalPlayers = ladder.length > 0 ? ladder[0].total_count : 0;
+  let totalPages = Math.ceil(totalPlayers / limit);
+  return { ladder, totalPages, page };
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -28,29 +35,75 @@ export function meta({}: Route.MetaArgs) {
 
 function LadderNav(props: { ladder?: string }) {
   return (
-    <nav>
-      <NavLink to="/" end>
+    <nav className="flex gap-0.5">
+      <NavLink to="/" end className="link">
         Go Home
       </NavLink>
-      {props.ladder === "3v3" ? (
-        <NavLink to="/leaderboards/2v2" end>
-          2v2
-        </NavLink>
-      ) : (
-        <NavLink to="/leaderboards/3v3" end>
-          3v3
-        </NavLink>
-      )}
+      <NavLink
+        to="/leaderboards/2v2"
+        end
+        className={({ isActive }) => (isActive ? "link active" : "link")}
+      >
+        2v2
+      </NavLink>
+      <NavLink
+        to="/leaderboards/3v3"
+        end
+        className={({ isActive }) => (isActive ? "link active" : "link")}
+      >
+        3v3
+      </NavLink>
     </nav>
   );
 }
 
-export default function Leaderboard(props: Route.ComponentProps) {
+function Pagination(props: {
+  page: number;
+  totalPages: number;
+  type?: string;
+}) {
   return (
-    <div className="">
-      <h1 className="text-left">{props.params.type} Arena Ladder</h1>
-      <div className="flex flex-col items-center">
-        <LadderNav ladder={props.params.type} />
+    <div className="flex gap-0.5">
+      {props.page > 1 ? (
+        <NavLink
+          to={`/leaderboards/${props.type}?page=${props.page - 1}`}
+          className="pagination"
+        >
+          Previous Page
+        </NavLink>
+      ) : (
+        <span className="pagination disabled">Previous Page</span>
+      )}
+      {props.page < props.totalPages ? (
+        <NavLink
+          to={`/leaderboards/${props.type}?page=${props.page + 1}`}
+          className="pagination"
+        >
+          Next Page
+        </NavLink>
+      ) : (
+        <span className="pagination disabled">Next Page</span>
+      )}
+    </div>
+  );
+}
+
+export default function Leaderboard(props: Route.ComponentProps) {
+  let { page, totalPages } = props.loaderData;
+  return (
+    <div className="flex flex-col items-center pt-2">
+      <h1 className="p-4 font-bold text-xl text-rating bg-content-90 rounded-sm backdrop-blur-xs">
+        {props.params.type} Arena Ladder
+      </h1>
+      <div className="flex flex-col items-center max-w-[1100px] mx-auto gap-0.5">
+        <div className="flex justify-between w-full">
+          <LadderNav ladder={props.params.type} />
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            type={props.params.type}
+          />
+        </div>
         <div className="content-background">
           <table>
             <thead>
@@ -94,6 +147,13 @@ export default function Leaderboard(props: Route.ComponentProps) {
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="flex justify-end w-full">
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            type={props.params.type}
+          />
         </div>
       </div>
     </div>

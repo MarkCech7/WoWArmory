@@ -43,6 +43,10 @@ tr:first-child td {
   --color-rival: rgb(73, 83, 72);
   --color-challenger: rgb(111, 89, 70);
   --color-unrated: rgb();
+  --color-content: #2b1809;
+  --color-rating: #b1997f;
+  --color-active: #523620;
+  --color-content-90: rgba(43, 24, 9, 0.9);
 }
 
 html,
@@ -57,9 +61,8 @@ body {
 }
 
 .content-background {
-  max-width: 1100px;
   color: white;
-  background-color: #2b1809;
+  background-color: var(--color-content);
   border-radius: 8px;
 }
 
@@ -68,8 +71,8 @@ body {
 .spec,
 .faction,
 .rank-img {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
 }
 
 .td-race {
@@ -91,7 +94,7 @@ body {
 }
 
 .rating {
-  color: #b1997f;
+  color: var(--color-rating);
   /*color: #9e3403; */
   font-weight: 500;
 }
@@ -99,4 +102,22 @@ body {
 table {
   table-layout: fixed;
   width: 100%;
+}
+
+.pagination,
+.link {
+  background-color: var(--color-content);
+  color: var(--color-rating);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+.link.active {
+  color: white;
+  background-color: #65452d;
+}
+
+.pagination.disabled {
+  color: rgb(99, 93, 93);
 }

@@ -10,9 +10,13 @@ const con = mysql.createConnection({
 
 interface ArenaPlayer extends RowDataPacket {}
 
-export async function loadArenaLadder(bracket: number) {
+export async function loadArenaLadder(
+  bracket: number,
+  limit: number,
+  offset: number
+) {
   const db = await con;
-  const data = await db.execute<ArenaPlayer[]>(
+  const data = await db.query<ArenaPlayer[]>(
     `WITH RankedPlayers AS (
     SELECT 
         atm.guid, 
@@ -47,8 +51,9 @@ TitleCutoffs AS (
         CEIL(total_players * 0.30) AS Rival_Cutoff, 
         CEIL(total_players * 0.60) AS Challenger_Cutoff
     FROM PlayerCounts
-)
-SELECT 
+),
+    FinalData AS (
+    SELECT 
     rp.guid, 
     rp.\`name\`, 
     rp.rating,  
@@ -74,9 +79,13 @@ LEFT JOIN character_talent ct ON rp.guid = ct.guid
                    44572, 53563, 53595, 53385, 47540, 47788, 47585, 1329, 51690, 51713,  
                    51490, 51533, 61295, 48181, 59672, 50796, 46924, 46917, 46968) 
 INNER JOIN TitleCutoffs tc ON rp.bracket = tc.bracket  
-WHERE rp.bracket = ?  
-ORDER BY rp.rating DESC, rp.rank;`,
-    [bracket]
+WHERE rp.bracket = ? 
+)
+SELECT *,
+    (SELECT COUNT(*) FROM FinalData) AS total_count -- Get total count before pagination
+FROM FinalData 
+ORDER BY rp.rating DESC, rp.rank LIMIT ? OFFSET ?;`,
+    [bracket, limit, offset]
   );
   return data[0];
 }
