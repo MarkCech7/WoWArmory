@@ -47,6 +47,7 @@ tr:first-child td {
   --color-rating: #b1997f;
   --color-active: #523620;
   --color-content-90: rgba(43, 24, 9, 0.9);
+  --color-content-shadow: #190e05;
 }
 
 html,
@@ -120,4 +121,48 @@ table {
 
 .pagination.disabled {
   color: rgb(99, 93, 93);
+}
+
+.search-input {
+  width: 300px;
+  border-radius: 5px;
+  font-size: 14px;
+  background-color: var(--color-content);
+  color: var(--color-rating);
+  margin-left: auto;
+  margin-right: 2px;
+}
+
+.go-home.ladder-div {
+  max-width: 78px;
+  max-height: auto;
+  width: 78px;
+  height: auto;
+}
+
+.ladder-div {
+  text-align: center;
+}
+
+.news-article-background {
+  background-image: url(assets\background\news-bg.jpg);
+  padding: 12px 12px 14px 12px;
+  height: 190px;
+}
+
+.news-header {
+  color: #fff8d6;
+  font-size: large;
+  font-weight: bold;
+  display: flex;
+  padding-top: 20px;
+  padding-bottom: 12px;
+}
+
+.news-article {
+  font-size: 12px;
+}
+
+.news-updates {
+  box-shadow: 8px 1px 5px var(--color-content-shadow);
 }

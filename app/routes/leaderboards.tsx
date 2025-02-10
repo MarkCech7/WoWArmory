@@ -5,6 +5,7 @@ import { CharRace, Faction } from "~/components/race";
 import { Class, NameColor } from "~/components/class";
 import { Spec } from "~/components/specialization";
 import { RankIcon } from "~/components/cutoffs";
+import { SearchBox } from "./home";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   let ladderType: number;
@@ -36,7 +37,7 @@ export function meta({}: Route.MetaArgs) {
 function LadderNav(props: { ladder?: string }) {
   return (
     <nav className="flex gap-0.5">
-      <NavLink to="/" end className="link">
+      <NavLink to="/" end className="link go-home">
         Go Home
       </NavLink>
       <NavLink
@@ -95,14 +96,10 @@ export default function Leaderboard(props: Route.ComponentProps) {
       <h1 className="p-4 font-bold text-xl text-rating bg-content-90 rounded-sm backdrop-blur-xs">
         {props.params.type} Arena Ladder
       </h1>
-      <div className="flex flex-col items-center max-w-[1100px] mx-auto gap-0.5">
+      <div className="flex flex-col items-center max-w-[1100px] mx-auto gap-0.5 pt-4">
         <div className="flex justify-between w-full">
           <LadderNav ladder={props.params.type} />
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            type={props.params.type}
-          />
+          <SearchBox />
         </div>
         <div className="content-background">
           <table>
