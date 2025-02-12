@@ -48,6 +48,7 @@ tr:first-child td {
   --color-active: #523620;
   --color-content-90: rgba(43, 24, 9, 0.9);
   --color-content-shadow: #190e05;
+  --color-article-name: #fff8d6;
 }
 
 html,
@@ -58,13 +59,21 @@ body {
   background-color: black;
   background-position: top;
   background-attachment: fixed;
-  padding-bottom: 30px;
+  padding-bottom: 10px;
+  scrollbar-gutter: stable;
 }
 
 .content-background {
   color: white;
   background-color: var(--color-content);
   border-radius: 8px;
+  overflow: hidden;
+}
+.top-bar {
+  width: 343px;
+  height: 22px;
+  margin-left: 7px;
+  background-image: url(assets\background\side-top-bar.jpg);
 }
 
 .race,
@@ -106,7 +115,8 @@ table {
 }
 
 .pagination,
-.link {
+.link,
+.ladder-name {
   background-color: var(--color-content);
   color: var(--color-rating);
   border-radius: 4px;
@@ -114,6 +124,11 @@ table {
   font-size: 14px;
 }
 
+.ladder-name {
+  color: white;
+  margin-left: 267px;
+  background-color: #65452d;
+}
 .link.active {
   color: white;
   background-color: #65452d;
@@ -146,12 +161,13 @@ table {
 
 .news-article-background {
   background-image: url(assets\background\news-bg.jpg);
-  padding: 12px 12px 14px 12px;
+  background-repeat: no-repeat;
+  padding: 12px 12px 14px 20px;
   height: 190px;
 }
 
 .news-header {
-  color: #fff8d6;
+  color: var(--color-article-name);
   font-size: large;
   font-weight: bold;
   display: flex;
@@ -163,6 +179,92 @@ table {
   font-size: 12px;
 }
 
+.news-article img {
+  border: solid 1px #541f09;
+}
+
 .news-updates {
   box-shadow: 8px 1px 5px var(--color-content-shadow);
+  background-color: #170e06;
+}
+
+.side-content {
+  width: 330px;
+  padding-right: 18px;
+  padding-left: 18px;
+  color: var(--color-rating);
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+}
+
+.discord {
+  display: flex;
+  justify-content: center;
+}
+
+.login-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 300px;
+  font-size: 14px;
+  color: var(--color-rating);
+  padding: 10px 10px 20px 10px;
+  padding-bottom: 20px;
+  margin: auto;
+  border: 5px;
+  border-color: rgb(113, 84, 62);
+  border-style: solid;
+  border-radius: 8px;
+}
+
+.login-menu input {
+  background-color: rgb(113, 84, 62);
+  padding-left: 12px;
+  border-radius: 5px;
+  color: white;
+}
+
+.screenshot-of-the-day {
+  display: flex;
+  justify-content: center;
+  width: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.screenshot-of-the-day img {
+  overflow: hidden;
+}
+
+.side-box-line {
+  width: 300px;
+  height: 0.8px;
+  background-color: rgb(195, 149, 96);
+  margin: 12px 0 12px 0;
+}
+
+.side-articles-container > div:first-child .side-article-desc {
+  margin-top: 12px;
+  color: var(--color-article-name);
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.side-articles-container > div:not(:first-child) .side-article-desc {
+  margin-top: 24px;
+  color: var(--color-article-name);
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.stay-connected-icons {
+  width: 28px;
+  height: 26px;
+}
+
+.featured-video {
+  overflow: hidden;
+  border-radius: 8px;
 }

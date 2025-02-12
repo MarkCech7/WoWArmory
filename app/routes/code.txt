@@ -1,0 +1,9 @@
+            <div className="discord">
+              <img
+                className="discord-img"
+                src={discord}
+                alt="Discord"
+                width="70px"
+                height="70px"
+              />
+            </div>
