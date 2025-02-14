@@ -1,7 +1,5 @@
 import type { Route } from "./+types/home";
-import type { ReactNode } from "react";
-import { NavLink } from "react-router";
-import { Example } from "~/components/dialog";
+import { NavLink, redirect } from "react-router";
 import searchIcon from "~/assets/other/search-icon-2044x2048-psdrpqwp.png";
 import pvpBackground1 from "~/assets/other/background-pvp-news1.jpg";
 import hotfixesimg from "~/assets/other/gnome.jpg";
@@ -12,6 +10,8 @@ import reddit from "~/assets/other/reddit.256x256.png";
 import ssoftheday from "~/assets/other/small.jpg";
 import featuredVideo from "~/assets/other/featured-video-thumb2.png";
 import pvpBackground2 from "~/assets/other/FSM0GMYGOCJP1309944125247.avif";
+import { getSession } from "~/server/sessions";
+import { getUserById } from "~/server/db";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -20,12 +20,28 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export function Ladder() {
+export async function loader({ request }: Route.LoaderArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
+  const userId = session.get("userId");
+  if (!userId) {
+    return { user: null };
+  }
+  let user = await getUserById(parseInt(userId));
+  return { user };
+}
+
+export function Ladder(props: { userId?: number }) {
   return (
     <div className="flex gap-0.5">
-      <div className="link">
-        <Example />
-      </div>
+      {props.userId ? (
+        <NavLink className="link" to="/logout">
+          Log out
+        </NavLink>
+      ) : (
+        <NavLink className="link" to="/login">
+          Log in
+        </NavLink>
+      )}
       <div className="link go-home ladder-div">Ladders</div>
       <NavLink className="link" to="/leaderboards/2v2" end>
         2v2
@@ -87,10 +103,12 @@ function ScreenshotOfTheDay(props: { image: string; author: string }) {
 }
 
 export default function Home(props: Route.ComponentProps) {
+  const { user } = props.loaderData;
   return (
     <div className="flex flex-col items-center max-w-[1000px] mx-auto gap-0.5 pt-5">
+      {user ? <p>Welcome {user.username} </p> : null}
       <div className="flex justify-between w-full">
-        <Ladder />
+        <Ladder userId={user?.id} />
         <SearchBox />
       </div>
       <div className="content-background w-[1000px] flex">

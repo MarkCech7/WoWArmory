@@ -90,43 +90,35 @@ ORDER BY rp.rating DESC, rp.rank LIMIT ? OFFSET ?;`,
   return data[0];
 }
 
-/*export async function loadArenaLadder(type: number) {
+interface Account extends RowDataPacket {
+  username: string;
+  salt: Uint8Array;
+  verifier: Uint8Array;
+  id: number;
+}
+
+export async function loadAccount(username: string) {
   const db = await con;
-  const data = await db.execute<ArenaPlayer[]>(
-    `
-        SELECT 
-    arena_team.arenaTeamId, 
-    arena_team.\`name\`,
-    arena_team.\`type\`, 
-    arena_team.rating, 
-    arena_team.seasonGames, 
-    arena_team.seasonWins, 
-    arena_team.rank, 
-    arena_team_member.arenaTeamId,
-    arena_team_member.guid,
-    arena_team_member.seasonGames,
-    arena_team_member.seasonWins,
-    characters.guid,
-    characters.\`name\`,
-    characters.race,
-    characters.class,
-    characters.gender,
-    character_talent.spell
-FROM arena_team 
-INNER JOIN arena_team_member 
-    ON arena_team.arenaTeamId = arena_team_member.arenaTeamId
-INNER JOIN characters 
-    ON arena_team_member.guid = characters.guid
-LEFT JOIN character_talent 
-    ON characters.guid = character_talent.guid 
-    AND character_talent.spell IN (49028, 49184, 48505, 50334, 65139, 
-                                     53270, 53209, 53301, 44425, 44457, 
-                                     44572, 53563, 53595, 53385, 47540, 
-                                     47788, 47585, 1329, 51690, 51713, 
-                                     51490, 51533, 61295, 48181, 59672, 
-                                     50796, 46924, 46917, 46968)    
-  WHERE \`type\`= ? ORDER BY arena_team.rating DESC;`,
-    [type]
+  const data = await db.query<Account[]>(
+    "SELECT id, username, salt, verifier FROM acore_auth.account WHERE username = ? LIMIT 1",
+    [username]
   );
-  return data[0];
-} */
+  let x = data[0];
+  if (Array.isArray(x) && x.length > 0) {
+    return x[0];
+  }
+  return null;
+}
+
+export async function getUserById(id: number) {
+  const db = await con;
+  const data = await db.query<Account[]>(
+    "SELECT id, username FROM acore_auth.account WHERE id = ? LIMIT 1",
+    [id]
+  );
+  let x = data[0];
+  if (Array.isArray(x) && x.length > 0) {
+    return x[0];
+  }
+  return null;
+}

@@ -226,6 +226,11 @@ table {
   color: white;
 }
 
+.login {
+  display: flex;
+  flex-direction: column;
+}
+
 .screenshot-of-the-day {
   display: flex;
   justify-content: center;

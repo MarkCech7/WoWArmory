@@ -1,5 +1,5 @@
 import type { Route } from "./+types/leaderboards";
-import { loadArenaLadder } from "~/db";
+import { loadArenaLadder } from "~/server/db";
 import { redirect, NavLink } from "react-router";
 import { CharRace, Faction } from "~/components/race";
 import { Class, NameColor } from "~/components/class";

@@ -9,5 +9,7 @@ export default [
   layout("./components/layout.tsx", [
     index("routes/home.tsx"),
     route("leaderboards/:type?", "routes/leaderboards.tsx"),
+    route("login", "routes/login.tsx"),
+    route("logout", "routes/logout.tsx"),
   ]),
 ] satisfies RouteConfig;
