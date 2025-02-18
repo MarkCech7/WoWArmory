@@ -1,6 +1,7 @@
 import bigInt from "big-integer";
 import type { BigInteger } from "big-integer";
 
+// TODO move this file into server scripts
 export const calculateSRP6Verifier = async (
   username: string,
   password: string,

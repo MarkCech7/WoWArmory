@@ -55,7 +55,7 @@ export function Class(props: { classId: number }) {
       alt = "Druid";
       break;
   }
-  return <img className="class" src={src} alt={alt} />;
+  return <img className="w-7 h-7" src={src} alt={alt} />;
 }
 
 export function NameColor(props: { classId: number; children: ReactNode }) {
@@ -92,7 +92,7 @@ export function NameColor(props: { classId: number; children: ReactNode }) {
       classColor = "text-class-druid";
       break;
   }
-  return <td className={classColor}>{props.children}</td>;
+  return <span className={classColor}>{props.children}</span>;
 }
 
 /*classes

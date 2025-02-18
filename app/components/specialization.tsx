@@ -155,7 +155,7 @@ export function Spec(props: { specId: number }) {
       alt = "Protection";
       break;
   }
-  return <img className="spec" src={src} alt={alt} />;
+  return <img className="w-7 h-7" src={src} alt={alt} />;
 }
 
 /*

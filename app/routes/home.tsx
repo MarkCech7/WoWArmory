@@ -4,12 +4,9 @@ import searchIcon from "~/assets/other/search-icon-2044x2048-psdrpqwp.png";
 import pvpBackground1 from "~/assets/other/background-pvp-news1.jpg";
 import hotfixesimg from "~/assets/other/gnome.jpg";
 import arenaRoV from "~/assets/other/RoV.webp";
-import discord from "~/assets/other/discord.256x256.png";
-import youtube from "~/assets/other/youtube-icon.png";
-import reddit from "~/assets/other/reddit.256x256.png";
-import ssoftheday from "~/assets/other/small.jpg";
+import ssoftheday from "~/assets/other/WoWScrnShot_040723_193841.jpg";
 import featuredVideo from "~/assets/other/featured-video-thumb2.png";
-import pvpBackground2 from "~/assets/other/FSM0GMYGOCJP1309944125247.avif";
+import pvpBackground2 from "~/assets/other/Arena-world-of-warcraft-screen.webp";
 import { getSession } from "~/server/sessions";
 import { getUserById } from "~/server/db";
 
@@ -42,7 +39,7 @@ export function Ladder(props: { userId?: number }) {
           Log in
         </NavLink>
       )}
-      <div className="link go-home ladder-div">Ladders</div>
+      <div className="link go-home text-center">Ladders</div>
       <NavLink className="link" to="/leaderboards/2v2" end>
         2v2
       </NavLink>
@@ -69,35 +66,121 @@ export function SearchBox() {
   );
 }
 
-function Article(props: { name: string; image: string; text: string }) {
+function Article(props: {
+  name: string;
+  image: string;
+  text: string;
+  isLast?: string;
+}) {
   return (
-    <div className="news-article-background">
-      <h3 className="news-header">{props.name}</h3>
-      <div className="news-article flex gap-3">
-        <div className="new-article-img w-[200px] h-[120px] shrink-0 flex">
-          <img src={props.image} alt="Article image" />
-        </div>
-        <div className="max-h-[120px] overflow-hidden">
-          <p>{props.text}</p>
+    <div className="pl-10 pr-10">
+      <div className="group text-[12px] flex overflow-hidden hover:bg-content-hover">
+        <div
+          className={`w-full border-t border-t-article-border flex pt-9 pb-9 ${
+            props.isLast ? "border-b border-b-article-border" : ""
+          }`}
+        >
+          <div className="max-w-[1300px] h-[120px] flex gap-5">
+            <div className="border border-[#541f09] w-[200px] shrink-0 flex group-hover:border-yellow-100">
+              <img src={props.image} alt="Article image" />
+            </div>
+            <div className="flex flex-col justify-start max-w-[700px]">
+              <h3 className="text-article-name text-lg font-bold flex pb-1 group-hover:text-yellow-200">
+                {props.name}
+              </h3>
+              <div className="max-h-[120px] overflow-hidden break-words">
+                <p>{props.text}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function SideArticle(props: { name: string }) {
+function NewestArticle(props: { name: string; image: string; text: string }) {
   return (
-    <div>
-      <h3 className="side-article-desc">{props.name}</h3>
-      <div className="side-box-line" />
+    <div className="group relative w-[850px] h-[450px] shrink-0 border border-[#541f09] hover:border-amber-300 overflow-hidden">
+      <div
+        className="absolute inset-0 bg-cover"
+        style={{ backgroundImage: `url(${props.image})` }}
+      />
+      <div
+        className="absolute bottom-0 w-full h-1/3 bg-cover backdrop-blur-md"
+        style={{
+          backgroundImage: `url(${props.image})`,
+          maskImage: "linear-gradient(to top, black, transparent)",
+          WebkitMaskImage: "linear-gradient(to top, black, transparent)",
+        }}
+      />
+      <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-black to-transparent opacity-100" />
+      <div className="absolute bottom-0 w-full">
+        <div className="flex flex-col p-5">
+          <p className="text-gray-50 text-[12px]">{props.text}</p>
+          <h3 className="text-article-name font-bold group-hover:text-amber-300">
+            {props.name}
+          </h3>
+        </div>
+      </div>
     </div>
   );
 }
 
-function ScreenshotOfTheDay(props: { image: string; author: string }) {
+function ScreenshotOfTheDay(props: { image: string }) {
   return (
-    <div className="screenshot-of-the-day">
-      <img src={props.image} alt={props.author} />
+    <div className="group relative h-[215px] bg-cover overflow-hidden border border-[#541f09] hover:border-amber-300">
+      <div
+        className="absolute inset-0 bg-cover"
+        style={{ backgroundImage: `url(${props.image})` }}
+      >
+        <div
+          className="absolute inset-0 bg-cover backdrop-blur-md"
+          style={{
+            backgroundImage: `url(${props.image})`,
+            maskImage: "linear-gradient(to top, black, transparent)",
+            WebkitMaskImage: "linear-gradient(to top, black, transparent)",
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-100" />
+          <div className="absolute bottom-0 w-full p-2">
+            <p className="text-article-name text-[13px] uppercase group-hover:text-amber-300">
+              Screenshot of the day
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeaturedVideo(props: { image: string }) {
+  return (
+    <div className="h-[215px] overflow-hidden">
+      <div className="group relative h-[215px] bg-cover overflow-hidden border border-[#541f09] hover:border-amber-300">
+        <a href="https://www.youtube.com/watch?v=vNHzuaqysKI" target="_blank">
+          <div
+            className="absolute inset-0 bg-cover"
+            style={{ backgroundImage: `url(${props.image})` }}
+          >
+            <div
+              className="absolute inset-0 bg-cover backdrop-blur-md"
+              style={{
+                backgroundImage: `url(${props.image})`,
+                maskImage: "linear-gradient(to top, black, transparent)",
+                WebkitMaskImage: "linear-gradient(to top, black, transparent)",
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-100" />
+              <div className="absolute bottom-0 w-full p-2">
+                <p className="text-article-name text-[13px] uppercase group-hover:text-amber-300">
+                  Featured videos
+                </p>
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
     </div>
   );
 }
@@ -105,19 +188,23 @@ function ScreenshotOfTheDay(props: { image: string; author: string }) {
 export default function Home(props: Route.ComponentProps) {
   const { user } = props.loaderData;
   return (
-    <div className="flex flex-col items-center max-w-[1000px] mx-auto gap-0.5 pt-5">
+    <div className="max-w-[1300px] mx-auto gap-0.5 pt-5">
       {user ? <p>Welcome {user.username} </p> : null}
-      <div className="flex justify-between w-full">
-        <Ladder userId={user?.id} />
-        <SearchBox />
+      <div className="flex gap-5 mt-2 mb-5 w-[1300px]">
+        <NewestArticle
+          name="Blade's Edge Arena & Dalaran Arena changes"
+          image={pvpBackground2}
+          text="Learn about Blade's Edge Arena & Dalaran Arena changes." //We are working to bring you updated versions of Blade's Edge Arena and Dalaran Arena. These changes consists of: Dalaran Arena - two additional staircases were added, behind each pile of crates, ensuring that players can reach the raised central square area from each of its four corners, Blade's Edge -  the platforms and rope at the middle of the ramps were replaced by ramps, similar to the ones already present in previous versions at each side of the bridge."
+        />
+
+        <div className="flex flex-col w-[450px] max-h-[450px] gap-5">
+          <ScreenshotOfTheDay image={ssoftheday} />
+          <FeaturedVideo image={featuredVideo} />
+        </div>
       </div>
-      <div className="content-background w-[1000px] flex">
-        <div className="news-updates w-[650px] pb-1.5 overflow-hidden">
-          <Article
-            name="Blade's Edge Arena & Dalaran Arena changes"
-            image={pvpBackground2}
-            text="We are working to bring you updated versions of Blade's Edge Arena and Dalaran Arena. These changes consists of: Dalaran Arena - two additional staircases were added, behind each pile of crates, ensuring that players can reach the raised central square area from each of its four corners, Blade's Edge -  the platforms and rope at the middle of the ramps were replaced by ramps, similar to the ones already present in previous versions at each side of the bridge."
-          />
+      <div className="flex justify-between w-full"></div>
+      <div className="text-white bg-content-dark-50 w-[1300px] flex rounded-2xl overflow-hidden">
+        <div className="w-[1300px] overflow-hidden pt-10 pb-14">
           <Article
             name="PvP Gear Changes"
             image={pvpBackground1}
@@ -133,42 +220,17 @@ export default function Home(props: Route.ComponentProps) {
             image={arenaRoV}
             text="Arena-Pass is a World of Warcraft: Wrath of the Lich King arena server running on Patch 3.3.6 with custom Gear and Class changes to shift 3.3.5a arena meta."
           />
-        </div>
-        <div className="side-window flex-col">
-          <div className="top-bar overflow-hidden"></div>
-          <div className="side-content">
-            <div className="side-articles-container">
-              <SideArticle name="Screenshot of the day" />
-              <ScreenshotOfTheDay image={ssoftheday} author="Provim" />
-              <SideArticle name="Stay connected" />
-              <div className="flex justify-center gap-2">
-                <img
-                  className="stay-connected-icons"
-                  src={discord}
-                  alt="Discord"
-                />
-                <img
-                  className="stay-connected-icons"
-                  src={youtube}
-                  alt="Youtube"
-                />
-                <img
-                  className="stay-connected-icons"
-                  src={reddit}
-                  alt="Reddit"
-                />
-              </div>
-              <SideArticle name="Featured videos" />
-              <div className="featured-video">
-                <a
-                  href="https://www.youtube.com/watch?v=vNHzuaqysKI"
-                  target="_blank"
-                >
-                  <img src={featuredVideo} alt="Featured video" width="330px" />
-                </a>
-              </div>
-            </div>
-          </div>
+          <Article
+            name="Welcome to Arena-Pass"
+            image={arenaRoV}
+            text="Arena-Pass is a World of Warcraft: Wrath of the Lich King arena server running on Patch 3.3.6 with custom Gear and Class changes to shift 3.3.5a arena meta."
+          />
+          <Article
+            name="Welcome to Arena-Pass"
+            image={arenaRoV}
+            text="Arena-Pass is a World of Warcraft: Wrath of the Lich King arena server running on Patch 3.3.6 with custom Gear and Class changes to shift 3.3.5a arena meta."
+            isLast="True"
+          />
         </div>
       </div>
     </div>

@@ -7,3 +7,11 @@
                 height="70px"
               />
             </div>
+
+           logo z layout <img src={logo} alt="Logo" width="100" height="auto" />
+
+                   <div className="flex">
+          <video autoPlay muted>
+            <source src="/assets/other/video.mp4" type="video/mp4" />
+          </video>
+        </div>
