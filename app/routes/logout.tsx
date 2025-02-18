@@ -16,7 +16,6 @@ export default function LogoutRoute() {
   const submit = useSubmit();
 
   useEffect(() => {
-    // Automatically submit the logout form when component mounts
     submit(null, { method: "post" });
   }, [submit]);
 

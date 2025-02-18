@@ -6,6 +6,7 @@ import { Class, NameColor } from "~/components/class";
 import { Spec } from "~/components/specialization";
 import { RankIcon } from "~/components/cutoffs";
 import { SearchBox } from "./home";
+import type { ReactNode } from "react";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   let ladderType: number;
@@ -34,30 +35,6 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-function LadderNav(props: { ladder?: string }) {
-  return (
-    <nav className="flex gap-0.5">
-      <NavLink to="/" end className="link go-home">
-        Go Home
-      </NavLink>
-      <NavLink
-        to="/leaderboards/2v2"
-        end
-        className={({ isActive }) => (isActive ? "link active" : "link")}
-      >
-        2v2
-      </NavLink>
-      <NavLink
-        to="/leaderboards/3v3"
-        end
-        className={({ isActive }) => (isActive ? "link active" : "link")}
-      >
-        3v3
-      </NavLink>
-    </nav>
-  );
-}
-
 function Pagination(props: {
   page: number;
   totalPages: number;
@@ -68,88 +45,118 @@ function Pagination(props: {
       {props.page > 1 ? (
         <NavLink
           to={`/leaderboards/${props.type}?page=${props.page - 1}`}
-          className="pagination"
+          className="bg-[var(--color-content)] text-[var(--color-rating)] rounded px-2 py-1 text-sm hover:bg-[var(--color-content-hover)]"
         >
           Previous Page
         </NavLink>
       ) : (
-        <span className="pagination disabled">Previous Page</span>
+        <span className="bg-[var(--color-content)] text-pagination-disabled rounded px-2 py-1 text-sm cursor-not-allowed">
+          Previous Page
+        </span>
       )}
       {props.page < props.totalPages ? (
         <NavLink
           to={`/leaderboards/${props.type}?page=${props.page + 1}`}
-          className="pagination"
+          className="bg-[var(--color-content)] text-[var(--color-rating)] rounded px-2 py-1 text-sm hover:bg-[var(--color-content-hover)]"
         >
           Next Page
         </NavLink>
       ) : (
-        <span className="pagination disabled">Next Page</span>
+        <span className="bg-[var(--color-content)] text-pagination-disabled rounded px-2 py-1 text-sm cursor-not-allowed">
+          Next Page
+        </span>
       )}
     </div>
   );
 }
 
+function HeaderCell(props: { children: ReactNode }) {
+  return (
+    <th className="text-white/75 bg-black/20 not-first:border-l border-white/25 p-1.5 border-b">
+      {props.children}
+    </th>
+  );
+}
+
+function TableCell(props: { children: ReactNode }) {
+  return <td className="p-1.5 border-b border-white/25">{props.children}</td>;
+}
+
 export default function Leaderboard(props: Route.ComponentProps) {
   let { page, totalPages } = props.loaderData;
   return (
-    <div className="flex flex-col items-center max-w-[1000px] mx-auto gap-0.5 pt-5">
-      <div className="flex justify-between w-full">
-        <LadderNav ladder={props.params.type} />
-        <h1 className="ladder-name font-bold">
-          {props.params.type} Arena Ladder
-        </h1>
-        <SearchBox />
+    <div className="flex flex-col items-center max-w-[1300px] mx-auto gap-0.5 pt-5">
+      <div className="flex justify-center w-auto p-2 rounded-md bg-content-dark-50 text-article-name">
+        <h1 className="font-bold p-2">{props.params.type} Arena Ladder</h1>
       </div>
-      <div className="content-background">
-        <table>
+      <div className="bg-content-dark-50 rounded-[12px] overflow-hidden">
+        <table className="table-fixed w-full">
           <thead>
-            <tr className="ladder-description">
-              <th>Rank</th>
-              <th>Race</th>
-              <th className="text-left">
-                <div className="pl-4">Player</div>
-              </th>
-              <th>Faction</th>
-              <th>Rating</th>
-              <th>Wins</th>
-              <th>Losses</th>
+            <tr>
+              <HeaderCell>Rank</HeaderCell>
+              <HeaderCell>Race</HeaderCell>
+              <HeaderCell>
+                <div className="pl-4 text-left">Player</div>
+              </HeaderCell>
+              <HeaderCell>Faction</HeaderCell>
+              <HeaderCell>Rating</HeaderCell>
+              <HeaderCell>Wins</HeaderCell>
+              <HeaderCell>Losses</HeaderCell>
             </tr>
           </thead>
           <tbody>
             {props.loaderData.ladder.map((player, index) => (
               <tr key={index}>
-                <td className="text-center rating">{player.rank}</td>
-                <td className="td-race">
-                  <div className="div-race">
+                <TableCell>
+                  <div className="text-center font-medium text-rating">
+                    {player.rank}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex justify-center">
                     <CharRace raceId={player.race} gender={player.gender} />
                     <Class classId={player.class} />
                     <Spec specId={player.spell} />
                   </div>
-                </td>
-                <NameColor classId={player.class}>
-                  <div className="pl-4">{player.name}</div>
-                </NameColor>
-                <td>
-                  <div className="div-faction">
+                </TableCell>
+                <TableCell>
+                  <NameColor classId={player.class}>
+                    <div className="pl-4">{player.name}</div>
+                  </NameColor>
+                </TableCell>
+                <TableCell>
+                  <div className="flex justify-center">
                     <Faction raceId={player.race} />
                   </div>
-                </td>
-                <RankIcon title={player.title}>{player.rating}</RankIcon>
-                <td className="wins text-center">{player.seasonWins}</td>
-                <td className="losses text-center">
-                  {player.seasonGames - player.seasonWins}
-                </td>
+                </TableCell>
+                <TableCell>
+                  <RankIcon title={player.title}>
+                    <div className="text-rating font-medium">
+                      {player.rating}
+                    </div>
+                  </RankIcon>
+                </TableCell>
+                <TableCell>
+                  <div className="text-wins text-center">
+                    {player.seasonWins}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-losses text-center">
+                    {player.seasonGames - player.seasonWins}
+                  </div>
+                </TableCell>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
-      <div className="flex justify-end w-full">
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          type={props.params.type}
-        />
+        <div className="flex justify-end w-full pt-2 pb-2">
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            type={props.params.type}
+          />
+        </div>
       </div>
     </div>
   );

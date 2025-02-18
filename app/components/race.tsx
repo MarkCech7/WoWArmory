@@ -105,7 +105,7 @@ export function CharRace(props: { raceId: number; gender: number }) {
       alt = "Draenei Female";
       break;
   }
-  return <img className="race" src={src} alt={alt} />;
+  return <img className="w-7 h-7" src={src} alt={alt} />;
 }
 
 export function Faction(props: { raceId: number }) {
@@ -124,7 +124,7 @@ export function Faction(props: { raceId: number }) {
     src = horde;
     alt = "Horde";
   }
-  return <img className="faction" src={src} alt={alt} />;
+  return <img className="w-7 h-7" src={src} alt={alt} />;
 }
 
 /* faction

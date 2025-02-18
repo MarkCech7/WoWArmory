@@ -37,7 +37,6 @@ export function RankColor(props: { title: string; children: ReactNode }) {
 }
 
 export function RankIcon(props: { title: string; children: ReactNode }) {
-  let rankIcon;
   let src = "";
   let alt = "";
   switch (props.title) {
@@ -66,13 +65,11 @@ export function RankIcon(props: { title: string; children: ReactNode }) {
       alt = "Unrated";
   }
   return (
-    <td className={`${rankIcon}`}>
-      <div className="flex justify-center">
-        <div className="flex items-center gap-1.5">
-          <img className="rank-img" src={src} alt={alt} />
-          <div className="rating w-[38px] shrink-0">{props.children}</div>
-        </div>
+    <div className="flex justify-center">
+      <div className="flex items-center gap-1.5">
+        <img className="w-7 h-7" src={src} alt={alt} />
+        <div className="rating w-9 shrink-0">{props.children}</div>
       </div>
-    </td>
+    </div>
   );
 }

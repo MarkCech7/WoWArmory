@@ -62,17 +62,22 @@ export async function action({ request }: Route.ActionArgs) {
 export default function Logins({ actionData }: Route.ComponentProps) {
   return (
     <div>
-      <h1>Account Manager</h1>
       <Form method="post">
-        <div className="h-[200px] flex flex-col bg-amber-50 gap-2 p-2">
-          <p>Username</p>
-          <input className="link" name="username" />
-          <p>Password</p>
-          <input className="link" type="password" name="password" />
-          <button type="submit" className="link">
-            Submit
-          </button>
-          {actionData?.error ? <p>{actionData.error}</p> : null}
+        <h1 className="bg-content-dark-50 mx-auto w-[200px] p-3 mt-4 mb-1 rounded-xl text-article-name flex justify-center font-bold">
+          Account Manager
+        </h1>
+
+        <div className="w-[1300px] h-[300px] gap-5 p-9 mx-auto bg-content-dark-50 ">
+          <div className="max-w-[250px] flex flex-col mx-auto gap-2 p-5 bg-amber-50 rounded-xl">
+            <p>Username</p>
+            <input className="link" name="username" />
+            <p>Password</p>
+            <input className="link" type="password" name="password" />
+            <button type="submit" className="link">
+              Submit
+            </button>
+            {actionData?.error ? <p>{actionData.error}</p> : null}
+          </div>
         </div>
       </Form>
     </div>
