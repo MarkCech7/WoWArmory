@@ -53,27 +53,6 @@ export const calculateSRP6Verifier = async (
   return verifier;
 };
 
-export const testVerifier = async (
-  username: string,
-  password: string,
-  salt: Uint8Array,
-  expectedVerifier: Uint8Array
-): Promise<boolean> => {
-  const calculatedVerifier = await calculateSRP6Verifier(
-    username,
-    password,
-    salt
-  );
-
-  if (calculatedVerifier.length !== expectedVerifier.length) return false;
-
-  for (let i = 0; i < calculatedVerifier.length; i++) {
-    if (calculatedVerifier[i] !== expectedVerifier[i]) return false;
-  }
-
-  return true;
-};
-
 export async function getSRP6RegistrationData(
   username: string,
   password: string
