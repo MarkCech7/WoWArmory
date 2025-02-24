@@ -3,7 +3,6 @@ import { insertAccount } from "~/server/db";
 import { Form, redirect } from "react-router";
 import { getSRP6RegistrationData } from "~/server/auth";
 import { getSession, commitSession } from "../server/sessions";
-import type { i } from "node_modules/vite/dist/node/types.d-aGj9QkWt";
 
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && "code" in error;
