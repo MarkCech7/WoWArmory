@@ -25,6 +25,9 @@ export function Ladder(props: { userId?: number }) {
   return (
     <div className="flex gap-1">
       <CustomNavLink to="/">Home</CustomNavLink>
+      <CustomNavLink to="/registration" end>
+        Create Account
+      </CustomNavLink>
       {props.userId ? (
         <CustomNavLink to="/logout">Log out</CustomNavLink>
       ) : (

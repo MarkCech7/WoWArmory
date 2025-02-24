@@ -1,7 +1,7 @@
 import type { Route } from "./+types/login";
 import { loadAccount } from "~/server/db";
 import { Form, redirect } from "react-router";
-import { calculateSRP6Verifier } from "~/components/auth";
+import { calculateSRP6Verifier } from "~/server/auth";
 import { getSession, commitSession } from "../server/sessions";
 
 function isEqualBytes(bytes1: Uint8Array, bytes2: Uint8Array): boolean {
@@ -67,7 +67,7 @@ export default function Logins({ actionData }: Route.ComponentProps) {
           Account Manager
         </h1>
 
-        <div className="w-[1300px] h-[300px] gap-5 p-9 mx-auto bg-content-dark-50 ">
+        <div className="w-[1300px] h-[300px] gap-5 p-9 mx-auto bg-content-dark-50 rounded-xl">
           <div className="max-w-[250px] flex flex-col mx-auto gap-2 p-5 bg-amber-50 rounded-xl">
             <p>Username</p>
             <input className="link" name="username" />

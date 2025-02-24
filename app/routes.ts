@@ -11,5 +11,6 @@ export default [
     route("leaderboards/:type?", "routes/leaderboards.tsx"),
     route("login", "routes/login.tsx"),
     route("logout", "routes/logout.tsx"),
+    route("registration", "routes/registration.tsx"),
   ]),
 ] satisfies RouteConfig;

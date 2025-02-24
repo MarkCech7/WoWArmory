@@ -1,7 +1,7 @@
 import bigInt from "big-integer";
 import type { BigInteger } from "big-integer";
+import { randomBytes } from "crypto";
 
-// TODO move this file into server scripts
 export const calculateSRP6Verifier = async (
   username: string,
   password: string,
@@ -73,3 +73,16 @@ export const testVerifier = async (
 
   return true;
 };
+
+export async function getSRP6RegistrationData(
+  username: string,
+  password: string
+) {
+  const salt = randomBytes(32);
+  const verifier = await calculateSRP6Verifier(username, password, salt);
+
+  return {
+    salt,
+    verifier,
+  };
+}
