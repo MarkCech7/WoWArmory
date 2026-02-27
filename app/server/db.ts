@@ -1,53 +1,42 @@
 import { Kysely, MysqlDialect, sql } from "kysely";
 import { createPool } from "mysql2";
 import type { Generated } from "kysely";
+import { CharRace } from "~/components/race";
+import { title } from "process";
 
-export interface AcoreCharactersDatabase {
-  arena_team_member: {
-    guid: number;
-    arenaTeamId: number;
-    seasonWins: number;
-    seasonGames: number;
-  };
-  arena_team: {
-    arenaTeamId: number;
-    type: number;
-    rating: number;
-  };
-  characters: {
-    guid: number;
-    name: string;
-    race: number;
-    class: number;
-    gender: number;
-  };
-  character_talent: {
-    guid: number;
-    spell: number;
-  };
+import type {
+  AcoreCharactersDatabase,
+  AcoreAuthDatabase,
+  AcoreWorldDatabase,
+} from "./db-types";
+
+// Use a module-scoped variable to ensure the connection is created only once
+let dbInstance: Kysely<
+  AcoreCharactersDatabase & AcoreAuthDatabase & AcoreWorldDatabase
+> | null = null;
+
+export function getDb() {
+  if (!dbInstance) {
+    dbInstance = new Kysely<
+      AcoreCharactersDatabase & AcoreAuthDatabase & AcoreWorldDatabase
+    >({
+      dialect: new MysqlDialect({
+        pool: createPool({
+          database: "acore_characters",
+          host: "localhost",
+          user: "root",
+          port: 3310,
+          password: "7xd21amf8",
+          connectionLimit: 10,
+        }),
+      }),
+    });
+  }
+  return dbInstance;
 }
 
-export interface AcoreAuthDatabase {
-  "acore_auth.account": {
-    id: Generated<number>;
-    username: string;
-    salt: Buffer;
-    verifier: Buffer;
-    reg_mail: string;
-  };
-}
-
-const db = new Kysely<AcoreCharactersDatabase & AcoreAuthDatabase>({
-  dialect: new MysqlDialect({
-    pool: createPool({
-      database: "acore_characters",
-      host: "localhost",
-      user: "root",
-      port: 3310,
-      password: "7xd21amf8",
-    }),
-  }),
-});
+// Export a pre-initialized instance for direct imports
+export const db = getDb();
 
 export async function loadAccount(username: string) {
   const result = await db
@@ -106,17 +95,17 @@ interface ArenaPlayer {
   total_count: number;
 }
 
+const validSpells = [
+  49028, 49184, 48505, 50334, 65139, 53270, 53209, 53301, 44425, 44457, 44572,
+  53563, 53595, 53385, 47540, 47788, 47585, 1329, 51690, 51713, 51490, 51533,
+  61295, 48181, 59672, 50796, 46924, 46917, 46968,
+];
+
 export async function loadArenaLadder(
   bracket: number,
   limit: number,
   offset: number
 ): Promise<ArenaPlayer[]> {
-  const validSpells = [
-    49028, 49184, 48505, 50334, 65139, 53270, 53209, 53301, 44425, 44457, 44572,
-    53563, 53595, 53385, 47540, 47788, 47585, 1329, 51690, 51713, 51490, 51533,
-    61295, 48181, 59672, 50796, 46924, 46917, 46968,
-  ];
-
   const rankedPlayers = db
     .with("RankedPlayers", (db) =>
       db
@@ -225,4 +214,185 @@ export async function loadArenaLadder(
     .execute();
 
   return result;
+}
+
+export async function loadCharacter() {
+  const equippedItemsUnenchant = await db
+    .selectFrom("item_instance as item")
+    .innerJoin("characters as char", "item.owner_guid", "char.guid")
+    .innerJoin("character_inventory as inv", (join) =>
+      join
+        .onRef("item.guid", "=", "inv.item")
+        .on("inv.bag", "=", 0)
+        .on("inv.slot", "<=", 18)
+    )
+    .innerJoin(
+      "acore_world.item_template as itemdb",
+      "item.itemEntry",
+      "itemdb.entry"
+    )
+    .leftJoin(
+      "acore_world.db_spell_12340 as spelldb",
+      "itemdb.spellid_1",
+      "spelldb.id"
+    )
+    .innerJoin(
+      "acore_world.db_itemdisplayinfo_12340 as itemdisplay",
+      "itemdb.displayid",
+      "itemdisplay.id"
+    )
+    .leftJoin(
+      "custom_transmogrification as transmog",
+      "item.guid",
+      "transmog.guid"
+    )
+    .leftJoin(
+      "acore_world.item_template as fake_itemdb",
+      "transmog.fakeentry",
+      "fake_itemdb.entry"
+    )
+    .select([
+      "item.guid as item_guid",
+      "item.itemEntry",
+      "item.owner_guid as owner",
+      "item.enchantments",
+      "inv.slot",
+      "char.guid as char_guid",
+      "itemdb.name as item_name",
+      "fake_itemdb.name as transmogrifyId",
+      "itemdb.quality",
+      "itemdb.flags",
+      "itemdb.itemlevel",
+      "itemdb.class",
+      "itemdb.subclass",
+      "itemdb.inventorytype",
+      "itemdb.armor",
+      "itemdb.dmg_min1",
+      "itemdb.dmg_max1",
+      "itemdb.delay",
+      "itemdb.stat_type1",
+      "itemdb.stat_type2",
+      "itemdb.stat_type3",
+      "itemdb.stat_type4",
+      "itemdb.stat_type5",
+      "itemdb.stat_type6",
+      "itemdb.stat_value1",
+      "itemdb.stat_value2",
+      "itemdb.stat_value3",
+      "itemdb.stat_value4",
+      "itemdb.stat_value5",
+      "itemdb.stat_value6",
+      "itemdb.maxdurability",
+      "itemdb.requiredlevel",
+      "itemdb.socketbonus",
+      "itemdb.allowableclass",
+      "itemdb.displayid as item_displayid",
+      "itemdb.spellid_1",
+      "itemdb.spellid_2",
+      "itemdb.spellid_3",
+      "itemdb.spellid_4",
+      "itemdb.spellid_5",
+      "itemdb.spelltrigger_1",
+      "itemdb.spelltrigger_2",
+      "itemdb.spelltrigger_3",
+      "itemdb.spelltrigger_4",
+      "itemdb.spelltrigger_5",
+      "itemdb.spellcooldown_1",
+      "itemdb.spellcooldown_2",
+      "itemdb.spellcooldown_3",
+      "itemdb.spellcooldown_4",
+      "itemdb.spellcooldown_5",
+      "itemdb.itemset",
+      "itemdb.socketcolor_1",
+      "itemdb.socketcolor_2",
+      "itemdb.socketcolor_3",
+      "itemdb.gemproperties",
+      "itemdisplay.inventoryicon_1 as item_icon",
+      "spelldb.Description_lang_enUS as spell_description",
+    ])
+    .where("char.name", "like", `Provimsen`)
+    .orderBy("inv.slot")
+    .execute();
+
+  const enchantids = equippedItemsUnenchant.flatMap((item) =>
+    item.enchantments
+      .split(" ")
+      .filter((i) => i !== "0" && i !== "")
+      .map((i) => parseInt(i))
+  );
+
+  const charInfo = await db
+    .selectFrom("characters")
+    .innerJoin(
+      "acore_world.db_chartitles_12340 as title_db",
+      "title_db.mask_id",
+      "characters.chosenTitle"
+    )
+    .innerJoin("character_talent", "characters.guid", "character_talent.guid")
+    .innerJoin("guild_member", "characters.guid", "guild_member.guid")
+    .innerJoin("guild", "guild_member.guildid", "guild.guildid")
+    .select([
+      "characters.name",
+      "characters.race",
+      "characters.class",
+      "characters.level",
+      "characters.chosenTitle as title",
+      "title_db.name_lang_enUS as actual_title",
+      "character_talent.spell as spec",
+      "guild.name as guild_name",
+    ])
+    .where("characters.name", "like", `Provimsen`)
+    .where("character_talent.spell", "in", validSpells)
+    .executeTakeFirstOrThrow();
+
+  const charStats = await db
+    .selectFrom("characters")
+    .innerJoin(
+      "character_stats as charstats",
+      "characters.guid",
+      "charstats.guid"
+    )
+    .select([
+      "health",
+      "power1",
+      "power2",
+      "power3",
+      "power4",
+      "power5",
+      "power6",
+      "power7",
+      "strength",
+      "agility",
+      "stamina",
+      "intellect",
+      "spirit",
+      "armor",
+    ])
+    .where("characters.name", "like", `Provimsen`)
+    .executeTakeFirstOrThrow();
+
+  const enchants = await db
+    .selectFrom("acore_world.db_spellitemenchantment_12340")
+    .select(["name_lang_enUS as name", "id"])
+    .where("id", "in", enchantids)
+    .execute();
+
+  const enchantsById = Object.fromEntries(
+    enchants.map((enchant) => [enchant.id, enchant])
+  );
+
+  const equippedItems = equippedItemsUnenchant.map((item) => {
+    return {
+      ...item,
+      enchantments: item.enchantments
+        .split(" ")
+        .map((i, index) => {
+          return { index: index / 3, ...enchantsById[i] };
+        })
+        .filter((i) => i.id),
+    };
+  });
+
+  console.dir(equippedItems, { depth: null });
+  return { equippedItems, charInfo, charStats };
 }

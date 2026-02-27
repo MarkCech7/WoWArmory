@@ -33,6 +33,15 @@
   --color-wins: #00ff00;
   --color-losses: #db2300;
   --color-pagination-disabled: rgb(99, 93, 93);
+  --color-wow-gold: #f8b700;
+  --color-wow-transmog: rgba(255, 128, 255, 1);
+  --color-wow-uncommon: #1eff00;
+  --color-wow-gray: #9d9d9d;
+  --color-wow-epic: #bf63fe;
+  --color-wow-epic1: #c600ff;
+  --color-wow-legendary: #ff8000;
+  --color-wow-rare: #0081ff;
+  --color-wow-common: #ffffff;
 }
 
 body {

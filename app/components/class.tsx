@@ -95,6 +95,44 @@ export function NameColor(props: { classId: number; children: ReactNode }) {
   return <span className={classColor}>{props.children}</span>;
 }
 
+export function ArmoryClass(props: { classId: number }) {
+  let className = "";
+
+  switch (props.classId) {
+    case 1:
+      className = "Warrior";
+      break;
+    case 2:
+      className = "Paladin";
+      break;
+    case 3:
+      className = "Hunter";
+      break;
+    case 4:
+      className = "Rogue";
+      break;
+    case 5:
+      className = "Priest";
+      break;
+    case 6:
+      className = "Death Knight";
+      break;
+    case 7:
+      className = "Shaman";
+      break;
+    case 8:
+      className = "Mage";
+      break;
+    case 10:
+      className = "Warlock";
+      break;
+    case 11:
+      className = "Druid";
+      break;
+  }
+  return <span>{className}</span>;
+}
+
 /*classes
 1 - Warrior
 2 - Paladin

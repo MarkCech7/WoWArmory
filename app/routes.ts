@@ -12,5 +12,6 @@ export default [
     route("login", "routes/login.tsx"),
     route("logout", "routes/logout.tsx"),
     route("registration", "routes/registration.tsx"),
+    route("armory/:characterId", "routes/armory.tsx"),
   ]),
 ] satisfies RouteConfig;

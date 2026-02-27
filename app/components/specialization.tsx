@@ -141,7 +141,6 @@ export function Spec(props: { specId: number }) {
       src = destruction;
       alt = "Destruction";
       break;
-
     case 46924:
       src = arms;
       alt = "Arms";
@@ -154,8 +153,111 @@ export function Spec(props: { specId: number }) {
       src = protectionwar;
       alt = "Protection";
       break;
+    default:
+      src = "";
+      alt = "";
   }
   return <img className="w-7 h-7" src={src} alt={alt} />;
+}
+
+export function ArmorySpec(props: { specId: number }) {
+  let specName = "";
+
+  switch (props.specId) {
+    case 49028:
+      specName = "Blood";
+      break;
+    case 49184:
+      specName = "Frost";
+      break;
+    case 49206:
+      specName = "Unholy";
+      break;
+    case 48505:
+      specName = "Balance";
+      break;
+    case 50334:
+      specName = "Feral";
+      break;
+    case 65139:
+      specName = "Restoration";
+      break;
+    case 53270:
+      specName = "Beastmastery";
+      break;
+    case 53209:
+      specName = "Marsksmanship";
+      break;
+    case 53301:
+      specName = "Survival";
+      break;
+    case 44425:
+      specName = "Arcane";
+      break;
+    case 44457:
+      specName = "Fire";
+      break;
+    case 44572:
+      specName = "Frost";
+      break;
+    case 53563:
+      specName = "Holy";
+      break;
+    case 53595:
+      specName = "Protection";
+      break;
+    case 53385:
+      specName = "Retribution";
+      break;
+    case 47540:
+      specName = "Discipline";
+      break;
+    case 47788:
+      specName = "Holy";
+      break;
+    case 47585:
+      specName = "Shadow";
+      break;
+    case 1329:
+      specName = "Assasination";
+      break;
+    case 51690:
+      specName = "Combat";
+      break;
+    case 51713:
+      specName = "Subtletly";
+      break;
+    case 51490:
+      specName = "Elemental";
+      break;
+    case 51533:
+      specName = "Enhancement";
+      break;
+    case 61295:
+      specName = "Restoration";
+      break;
+    case 48181:
+      specName = "Affliction";
+      break;
+    case 59672:
+      specName = "Demonology";
+      break;
+    case 50796:
+      specName = "Destruction";
+      break;
+    case 46924:
+      specName = "Arms";
+      break;
+    case 46917:
+      specName = "Fury";
+      break;
+    case 46968:
+      specName = "Protection";
+      break;
+    default:
+      specName = "";
+  }
+  return <span>{specName}</span>;
 }
 
 /*

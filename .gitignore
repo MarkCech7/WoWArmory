@@ -7,3 +7,11 @@
 
 /src/
 app/assets/videos/
+app/assets/icons/
+app/assets
+
+backend/venv/
+__pycache__/
+backend/.env
+chroma_db/
+oldcode.py

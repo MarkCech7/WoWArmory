@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+langgraph
+langchain-ollama
+langchain-core
+langchain-chroma
+sqlalchemy
+python-dotenv
+pymysql

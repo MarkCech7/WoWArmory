@@ -9,6 +9,7 @@ import featuredVideo from "~/assets/other/featured-video-thumb2.png";
 import pvpBackground2 from "~/assets/other/Arena-world-of-warcraft-screen.webp";
 import { getSession } from "~/server/sessions";
 import { getUserById } from "~/server/db";
+import Chat from "~/components/chat";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -232,6 +233,7 @@ export default function Home(props: Route.ComponentProps) {
             isLast="True"
           />
         </div>
+        <Chat />
       </div>
     </div>
   );

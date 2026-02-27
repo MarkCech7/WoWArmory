@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import humanMale from "~/assets/race/human-male.webp";
 import humanFemale from "~/assets/race/human-female.webp";
 import orcMale from "~/assets/race/orc-male.webp";
@@ -125,6 +126,44 @@ export function Faction(props: { raceId: number }) {
     alt = "Horde";
   }
   return <img className="w-7 h-7" src={src} alt={alt} />;
+}
+
+export function ArmoryRace(props: { raceId: number }) {
+  let raceName = "";
+
+  switch (props.raceId) {
+    case 1:
+      raceName = "Human";
+      break;
+    case 2:
+      raceName = "Orc";
+      break;
+    case 3:
+      raceName = "Dwarf";
+      break;
+    case 4:
+      raceName = "Night Elf";
+      break;
+    case 5:
+      raceName = "Undead";
+      break;
+    case 6:
+      raceName = "Tauren";
+      break;
+    case 7:
+      raceName = "Gnome";
+      break;
+    case 8:
+      raceName = "Troll";
+      break;
+    case 10:
+      raceName = "Blood Elf";
+      break;
+    case 11:
+      raceName = "Draenei";
+      break;
+  }
+  return <span>{raceName}</span>;
 }
 
 /* faction
