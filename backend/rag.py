@@ -5,7 +5,7 @@ from langchain_chroma import Chroma
 from db import query_db
 import os
 
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 embeddings = OllamaEmbeddings(   
     model=os.getenv("MODEL"),

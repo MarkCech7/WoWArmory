@@ -22,11 +22,11 @@ export function getDb() {
     >({
       dialect: new MysqlDialect({
         pool: createPool({
-          database: "acore_characters",
-          host: "localhost",
-          user: "root",
-          port: 3310,
-          password: "7xd21amf8",
+          database: process.env.CHARACTERS_DB,
+          host: process.env.DB_HOST,
+          user: process.env.DB_USER,
+          port: Number(process.env.DB_PORT),
+          password: process.env.DB_PASSWORD,
           connectionLimit: 10,
         }),
       }),
@@ -64,7 +64,7 @@ export async function insertAccount(
   username: string,
   salt: Buffer,
   verifier: Buffer,
-  reg_email: string
+  reg_email: string,
 ) {
   const result = await db
     .insertInto("acore_auth.account")
@@ -104,7 +104,7 @@ const validSpells = [
 export async function loadArenaLadder(
   bracket: number,
   limit: number,
-  offset: number
+  offset: number,
 ): Promise<ArenaPlayer[]> {
   const rankedPlayers = db
     .with("RankedPlayers", (db) =>
@@ -123,7 +123,7 @@ export async function loadArenaLadder(
           sql<number>`MAX(atm.seasonWins)`.as("seasonWins"),
           sql<number>`MAX(atm.seasonGames)`.as("seasonGames"),
           sql<number>`DENSE_RANK() OVER (PARTITION BY at.type ORDER BY MAX(at.rating) DESC)`.as(
-            "rank"
+            "rank",
           ),
         ])
         .groupBy([
@@ -133,7 +133,7 @@ export async function loadArenaLadder(
           "c.race",
           "c.class",
           "c.gender",
-        ])
+        ]),
     )
     .with("PlayerCounts", (db) =>
       db
@@ -143,7 +143,7 @@ export async function loadArenaLadder(
           "at.type as bracket",
           sql<number>`COUNT(DISTINCT atm.guid)`.as("total_players"),
         ])
-        .groupBy("at.type")
+        .groupBy("at.type"),
     )
     .with("TitleCutoffs", (db) =>
       db
@@ -155,7 +155,7 @@ export async function loadArenaLadder(
           sql<number>`CEIL(total_players * 0.10)`.as("Duelist_Cutoff"),
           sql<number>`CEIL(total_players * 0.30)`.as("Rival_Cutoff"),
           sql<number>`CEIL(total_players * 0.60)`.as("Challenger_Cutoff"),
-        ])
+        ]),
     )
     .with("FinalData", (db) =>
       db
@@ -163,7 +163,7 @@ export async function loadArenaLadder(
         .leftJoin("character_talent as ct", (join) =>
           join
             .onRef("rp.guid", "=", "ct.guid")
-            .on("ct.spell", "in", validSpells)
+            .on("ct.spell", "in", validSpells),
         )
         .innerJoin("TitleCutoffs as tc", "rp.bracket", "tc.bracket")
         .select([
@@ -187,7 +187,7 @@ export async function loadArenaLadder(
             ELSE 'No Title'
           END`.as("title"),
         ])
-        .where("rp.bracket", "=", bracket)
+        .where("rp.bracket", "=", bracket),
     );
 
   const result = await rankedPlayers
@@ -224,32 +224,32 @@ export async function loadCharacter() {
       join
         .onRef("item.guid", "=", "inv.item")
         .on("inv.bag", "=", 0)
-        .on("inv.slot", "<=", 18)
+        .on("inv.slot", "<=", 18),
     )
     .innerJoin(
       "acore_world.item_template as itemdb",
       "item.itemEntry",
-      "itemdb.entry"
+      "itemdb.entry",
     )
     .leftJoin(
       "acore_world.db_spell_12340 as spelldb",
       "itemdb.spellid_1",
-      "spelldb.id"
+      "spelldb.id",
     )
     .innerJoin(
       "acore_world.db_itemdisplayinfo_12340 as itemdisplay",
       "itemdb.displayid",
-      "itemdisplay.id"
+      "itemdisplay.id",
     )
     .leftJoin(
       "custom_transmogrification as transmog",
       "item.guid",
-      "transmog.guid"
+      "transmog.guid",
     )
     .leftJoin(
       "acore_world.item_template as fake_itemdb",
       "transmog.fakeentry",
-      "fake_itemdb.entry"
+      "fake_itemdb.entry",
     )
     .select([
       "item.guid as item_guid",
@@ -318,7 +318,7 @@ export async function loadCharacter() {
     item.enchantments
       .split(" ")
       .filter((i) => i !== "0" && i !== "")
-      .map((i) => parseInt(i))
+      .map((i) => parseInt(i)),
   );
 
   const charInfo = await db
@@ -326,7 +326,7 @@ export async function loadCharacter() {
     .innerJoin(
       "acore_world.db_chartitles_12340 as title_db",
       "title_db.mask_id",
-      "characters.chosenTitle"
+      "characters.chosenTitle",
     )
     .innerJoin("character_talent", "characters.guid", "character_talent.guid")
     .innerJoin("guild_member", "characters.guid", "guild_member.guid")
@@ -350,7 +350,7 @@ export async function loadCharacter() {
     .innerJoin(
       "character_stats as charstats",
       "characters.guid",
-      "charstats.guid"
+      "charstats.guid",
     )
     .select([
       "health",
@@ -378,7 +378,7 @@ export async function loadCharacter() {
     .execute();
 
   const enchantsById = Object.fromEntries(
-    enchants.map((enchant) => [enchant.id, enchant])
+    enchants.map((enchant) => [enchant.id, enchant]),
   );
 
   const equippedItems = equippedItemsUnenchant.map((item) => {

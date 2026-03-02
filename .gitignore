@@ -12,6 +12,6 @@ app/assets
 
 backend/venv/
 __pycache__/
-backend/.env
+.env
 chroma_db/
 oldcode.py

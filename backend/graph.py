@@ -7,7 +7,7 @@ from typing import TypedDict, Annotated
 from tools import tools
 import os, re, json, uuid, operator
 
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 class AgentState(TypedDict):
     messages: Annotated[list, operator.add]
@@ -40,6 +40,7 @@ RULES:
 - For player/guild data → call SQL tools immediately
 - NEVER hallucinate, only use what tools return
 - NEVER ask user to call tools, YOU call them
+- DO NOT ANSWER NON WOW-RELATED QUESTIONS, instead say "I can only answer questions related to World of Warcraft and the server."
 
 EXAMPLES:
 Q: Give me list of players which names starts with "Test" A: query_characters_db("SELECT name FROM `characters`.`characters` WHERE name LIKE 'Test%' LIMIT 10;")
