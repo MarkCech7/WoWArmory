@@ -16,6 +16,21 @@ type Stat = {
   value: number;
 };
 
+type SetPiece = { itemId: number; name: string; equipped: boolean };
+type SetSpell = {
+  spellId: number;
+  threshold: number;
+  description: string;
+  active: boolean;
+};
+type ItemSetInfo = {
+  id: number;
+  name: string;
+  equippedCount: number;
+  pieces: SetPiece[];
+  spells: SetSpell[];
+};
+
 export function ItemClass(props: { class: number; subClass: number }) {
   const itemClass = itemClassMap[`${props.class}-${props.subClass}`];
   return <span>{itemClass}</span>;
@@ -28,7 +43,7 @@ export function calculateWeaponSpeed(delay: number) {
 export function calculateWeaponDPS(
   minDamage: number,
   maxDamage: number,
-  delay: number
+  delay: number,
 ) {
   const avgDamage = (minDamage + maxDamage) / 2;
   const dps = avgDamage / (delay / 1000);
@@ -60,12 +75,12 @@ export function formatSecondaryStat(statId: number, statValue: number) {
 
 function collectStats(slot: any): Stat[] {
   return [
-    { type: slot.stat_type1, value: slot.stat_value1 },
-    { type: slot.stat_type2, value: slot.stat_value2 },
-    { type: slot.stat_type3, value: slot.stat_value3 },
-    { type: slot.stat_type4, value: slot.stat_value4 },
-    { type: slot.stat_type5, value: slot.stat_value5 },
-    { type: slot.stat_type6, value: slot.stat_value6 },
+    { type: slot.StatModifierBonusStat1, value: slot.StatModifierBonusAmount1 },
+    { type: slot.StatModifierBonusStat2, value: slot.StatModifierBonusAmount2 },
+    { type: slot.StatModifierBonusStat3, value: slot.StatModifierBonusAmount3 },
+    { type: slot.StatModifierBonusStat4, value: slot.StatModifierBonusAmount4 },
+    { type: slot.StatModifierBonusStat5, value: slot.StatModifierBonusAmount5 },
+    { type: slot.StatModifierBonusStat6, value: slot.StatModifierBonusAmount6 },
   ].filter((s) => s.type > 0 && s.value > 0);
 }
 
@@ -79,7 +94,7 @@ export function formatPrimaryStats(slot: any): React.ReactNode[] {
         <div key={`primary-${statId}-${idx}`}>
           {formatPrimaryStat(s.type, s.value)}
         </div>
-      ))
+      )),
   );
 }
 
@@ -102,19 +117,17 @@ export function formatSecondaryStats(slot: any): React.ReactNode[] {
       );
     });
 }
-export function formatSpellTooltip(
-  spellTrigger: number,
-  spell_description: string
-) {
-  if (spellTrigger === 0) {
-    return `Use: ${spell_description}`;
-  }
-  return `Equip: ${spell_description}`;
+export function formatSpellTooltip(triggerType: number, description: string) {
+  if (triggerType === 0) {
+    return `Use: ${description}`;
+  } else if (triggerType === 2) {
+    return `Chance on hit: ${description}`;
+  } else return `Equip: ${description}`;
 }
 
 export function getGemIconById(
   gemId: number | undefined,
-  socketColor: number | undefined
+  socketColor: number | undefined,
 ): React.ReactNode {
   if (gemId && gemIcons[gemId]) {
     return (
@@ -148,7 +161,7 @@ export function getGemBonusById(bonusId: number): React.ReactNode {
 
 export function getFlags(
   flagsValue: number,
-  flagsDefinition: Record<string, number>
+  flagsDefinition: Record<string, number>,
 ): string[] {
   return Object.entries(flagsDefinition)
     .filter(([_, value]) => (flagsValue & value) === value)
@@ -169,7 +182,7 @@ export function isUniqueEquipped(flags: number): boolean {
 
 export function getAllowedClasses(
   classValue: number,
-  classDefinition: Record<string, number>
+  classDefinition: Record<string, number>,
 ): string | null {
   if (classValue === -1 || classValue === 262143) {
     return null;
@@ -185,4 +198,44 @@ export function getAllowedClasses(
     });
 
   return `Classes: ${classNames.join(", ")}`;
+}
+
+export function ItemSetTooltip({
+  setId,
+  itemSetData,
+}: {
+  setId: number;
+  itemSetData: Record<number, ItemSetInfo> | undefined;
+}) {
+  const set = itemSetData?.[setId];
+  if (!set) return null;
+
+  return (
+    <div className="mt-1">
+      <div className="pb-[10px]" />
+      <div className="text-wow-gold">
+        {set.name.replace(/"/g, "")} ({set.equippedCount}/{set.pieces.length})
+      </div>
+      {set.pieces.map((piece) => (
+        <div
+          key={piece.itemId}
+          className={`pl-2 ${
+            piece.equipped ? "text-wow-stagger pl-2" : "text-wow-gray pl-2"
+          }`}
+        >
+          {piece.name}
+        </div>
+      ))}
+      {set.spells.length > 0 && <div className="pb-[6px]" />}
+      {set.spells.map((spell) => (
+        <div
+          key={spell.spellId}
+          className={spell.active ? "text-wow-uncommon" : "text-wow-gray"}
+        >
+          {!spell.active && `(${spell.threshold}) `}
+          Set: {spell.description}
+        </div>
+      ))}
+    </div>
+  );
 }

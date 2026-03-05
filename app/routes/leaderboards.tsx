@@ -16,9 +16,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   let offset = (page - 1) * limit;
 
   if (params.type === "2v2") {
-    ladderType = 2;
+    ladderType = 0;
   } else if (params.type === "3v3") {
-    ladderType = 3;
+    ladderType = 1;
   } else {
     return redirect("/leaderboards/2v2");
   }
@@ -116,7 +116,7 @@ export default function Leaderboard(props: Route.ComponentProps) {
                   <div className="flex justify-center">
                     <CharRace raceId={player.race} gender={player.gender} />
                     <Class classId={player.class} />
-                    <Spec specId={player.spell} />
+                    <Spec specId={Number(player.spell)} />
                   </div>
                 </TableCell>
                 <TableCell>

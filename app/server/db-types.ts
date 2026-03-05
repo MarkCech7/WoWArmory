@@ -1,16 +1,17 @@
 import type { Generated } from "kysely";
 
-export interface AcoreCharactersDatabase {
-  arena_team_member: {
+export interface CharactersDatabase {
+  character_arena_stats: {
     guid: number;
-    arenaTeamId: number;
-    seasonWins: number;
+    slot: number;
+    personalRating: number;
+    weekGames: number;
+    weekWins: number;
     seasonGames: number;
-  };
-  arena_team: {
-    arenaTeamId: number;
-    type: number;
-    rating: number;
+    seasonWon: number;
+    seasonBestRating: number;
+    weeklyBestRating: number;
+    rank: number;
   };
   characters: {
     guid: number;
@@ -31,7 +32,7 @@ export interface AcoreCharactersDatabase {
   };
   character_talent: {
     guid: number;
-    spell: number;
+    talentId: number;
   };
   character_inventory: {
     guid: number /* player guid */;
@@ -62,93 +63,203 @@ export interface AcoreCharactersDatabase {
     spirit: number;
     armor: number;
   };
-  custom_transmogrification: {
-    owner: number;
-    guid: number;
-    fakeentry: number;
+  item_instance_transmog: {
+    itemGuid: number;
+    itemModifiedAppearanceAllSpecs: number;
   };
 }
 
-export interface AcoreWorldDatabase {
-  "acore_world.item_template": {
-    entry: number /* itemEntry from item_instance */;
-    name: string;
-    displayid: number /* actual displayid of item */;
-    quality: number;
-    flags: number;
-    itemlevel: number;
-    class: number;
-    subclass: number;
-    inventorytype: number;
-    armor: number;
-    dmg_min1: number;
-    dmg_max1: number;
-    delay: number;
-    stat_type1: number;
-    stat_value1: number;
-    stat_type2: number;
-    stat_value2: number;
-    stat_type3: number;
-    stat_value3: number;
-    stat_type4: number;
-    stat_value4: number;
-    stat_type5: number;
-    stat_value5: number;
-    stat_type6: number;
-    stat_value6: number;
-    spellid_1: number;
-    spelltrigger_1: number;
-    spellcooldown_1: number;
-    spellid_2: number;
-    spelltrigger_2: number;
-    spellcooldown_2: number;
-    spellid_3: number;
-    spelltrigger_3: number;
-    spellcooldown_3: number;
-    spellid_4: number;
-    spelltrigger_4: number;
-    spellcooldown_4: number;
-    spellid_5: number;
-    spelltrigger_5: number;
-    spellcooldown_5: number;
-    itemset: number;
-    socketcolor_1: number;
-    socketcolor_2: number;
-    socketcolor_3: number;
-    gemproperties: number;
-    maxdurability: number;
-    socketbonus: number;
-    requiredlevel: number;
-    allowableclass: number;
-  };
-  "acore_world.db_chartitles_12340": {
-    mask_id: number;
-    name_lang_enUS: string;
-  };
-  "acore_world.db_itemdisplayinfo_12340": {
-    id: number;
-    inventoryicon_1: string;
-  };
-  "acore_world.db_spellitemenchantment_12340": {
-    id: number;
-    name_lang_enUS: string;
-  };
-  "acore_world.db_gemproperties_12340": {
-    id: number;
-    enchant_id: number;
-  };
-  "acore_world.db_spell_12340": {
-    id: number;
-    Description_lang_enUS: string;
-  };
-}
-
-export interface AcoreAuthDatabase {
-  "acore_auth.account": {
+export interface AuthDatabase {
+  "auth.account": {
     id: Generated<number>;
     username: string;
     salt: Buffer;
     verifier: Buffer;
     reg_mail: string;
+  };
+}
+
+export interface WebDatabase {
+  "web.item_sparse": {
+    ID: number /* itemEntry from item_instance */;
+    Display: string;
+    OverallQualityID: number;
+    Flags1: number;
+    Flags2: number;
+    Flags3: number;
+    Flags4: number;
+    ItemLevel: number;
+    InventoryType: number;
+    Resistances1: number /* this is Armor stat */;
+    MinDamage1: number;
+    MaxDamage1: number;
+    ItemDelay: number;
+    StatModifierBonusStat1: number;
+    StatModifierBonusStat2: number;
+    StatModifierBonusStat3: number;
+    StatModifierBonusStat4: number;
+    StatModifierBonusStat5: number;
+    StatModifierBonusStat6: number;
+    StatModifierBonusAmount1: number;
+    StatModifierBonusAmount2: number;
+    StatModifierBonusAmount3: number;
+    StatModifierBonusAmount4: number;
+    StatModifierBonusAmount5: number;
+    StatModifierBonusAmount6: number;
+    ItemSet: number;
+    SocketType1: number;
+    SocketType2: number;
+    SocketType3: number;
+    GemProperties: number;
+    MaxDurability: number;
+    SocketMatchEnchantmentID: number;
+    RequiredLevel: number;
+    AllowableClass: number;
+  };
+  "web.item": {
+    ID: number /* itemEntry from item_instance */;
+    ClassID: number;
+    SubClassID: number;
+    IconFileDataID: number;
+  };
+  "web.icon_data": {
+    DataFileID: number;
+    IconName: string;
+  };
+  "web.char_titles": {
+    ID: number;
+    Name: string;
+    Name1: string;
+    MaskID: number;
+  };
+  "web.spell_item_enchantment": {
+    ID: number;
+    Name: string;
+  };
+  "web.gem_properties": {
+    ID: number;
+    EnchantID: number;
+  };
+  "web.spell": {
+    ID: number;
+    Description: string;
+  };
+  "web.item_effect": {
+    ID: number;
+    SpellID: number;
+    TriggerType: number;
+    ParentItemID: number;
+  };
+  "web.talent": {
+    ID: number;
+    SpellRank1: string;
+  };
+  "web.item_modified_appearance": {
+    ID: number;
+    ItemID: number;
+  };
+}
+
+export interface HotfixesDatabase {
+  "hotfixes.item_sparse": {
+    ID: number /* itemEntry from item_instance */;
+    Display: string;
+    OverallQualityID: number;
+    Flags1: number;
+    Flags2: number;
+    Flags3: number;
+    Flags4: number;
+    ItemLevel: number;
+    InventoryType: number;
+    Resistances1: number /* this is Armor stat */;
+    MinDamage1: number;
+    MaxDamage1: number;
+    ItemDelay: number;
+    StatModifierBonusStat1: number;
+    StatModifierBonusStat2: number;
+    StatModifierBonusStat3: number;
+    StatModifierBonusStat4: number;
+    StatModifierBonusStat5: number;
+    StatModifierBonusStat6: number;
+    StatModifierBonusAmount1: number;
+    StatModifierBonusAmount2: number;
+    StatModifierBonusAmount3: number;
+    StatModifierBonusAmount4: number;
+    StatModifierBonusAmount5: number;
+    StatModifierBonusAmount6: number;
+    ItemSet: number;
+    SocketType1: number;
+    SocketType2: number;
+    SocketType3: number;
+    GemProperties: number;
+    MaxDurability: number;
+    SocketMatchEnchantmentID: number;
+    RequiredLevel: number;
+    AllowableClass: number;
+  };
+  "hotfixes.item": {
+    ID: number /* itemEntry from item_instance */;
+    ClassID: number;
+    SubClassID: number;
+    IconFileDataID: number;
+  };
+  "hotfixes.char_titles": {
+    ID: number;
+    Name: string;
+    Name1: string;
+    MaskID: number;
+  };
+  "hotfixes.spell_item_enchantment": {
+    ID: number;
+    Name: string;
+  };
+  "hotfixes.gem_properties": {
+    ID: number;
+    EnchantID: number;
+  };
+  /*"hotfixes.spell": {
+    ID: number;
+    Description: string;
+  };*/
+  "hotfixes.item_effect": {
+    ID: number;
+    SpellID: number;
+    TriggerType: number;
+    ParentItemID: number;
+  };
+  "hotfixes.talent": {
+    ID: number;
+    SpellRank1: string;
+  };
+  "hotfixes.item_modified_appearance": {
+    ID: number;
+    ItemID: number;
+  };
+  "web.item_set": {
+    ID: number;
+    Name: string;
+    ItemID1: number;
+    ItemID2: number;
+    ItemID3: number;
+    ItemID4: number;
+    ItemID5: number;
+    ItemID6: number;
+    ItemID7: number;
+    ItemID8: number;
+    ItemID9: number;
+    ItemID10: number;
+    ItemID11: number;
+    ItemID12: number;
+    ItemID13: number;
+    ItemID14: number;
+    ItemID15: number;
+    ItemID16: number;
+    ItemID17: number;
+  };
+  "web.item_set_spell": {
+    ID: number;
+    SpellID: number;
+    Threshold: number;
+    ItemSetID: number;
   };
 }

@@ -5,20 +5,21 @@ import { CharRace } from "~/components/race";
 import { title } from "process";
 
 import type {
-  AcoreCharactersDatabase,
-  AcoreAuthDatabase,
-  AcoreWorldDatabase,
+  CharactersDatabase,
+  AuthDatabase,
+  WebDatabase,
+  HotfixesDatabase,
 } from "./db-types";
 
 // Use a module-scoped variable to ensure the connection is created only once
 let dbInstance: Kysely<
-  AcoreCharactersDatabase & AcoreAuthDatabase & AcoreWorldDatabase
+  CharactersDatabase & AuthDatabase & WebDatabase & HotfixesDatabase
 > | null = null;
 
 export function getDb() {
   if (!dbInstance) {
     dbInstance = new Kysely<
-      AcoreCharactersDatabase & AcoreAuthDatabase & AcoreWorldDatabase
+      CharactersDatabase & AuthDatabase & WebDatabase & HotfixesDatabase
     >({
       dialect: new MysqlDialect({
         pool: createPool({
@@ -40,7 +41,7 @@ export const db = getDb();
 
 export async function loadAccount(username: string) {
   const result = await db
-    .selectFrom("acore_auth.account")
+    .selectFrom("auth.account")
     .select(["id", "username", "salt", "verifier"])
     .where("username", "=", username)
     .limit(1)
@@ -51,7 +52,7 @@ export async function loadAccount(username: string) {
 
 export async function getUserById(id: number) {
   const result = await db
-    .selectFrom("acore_auth.account")
+    .selectFrom("auth.account")
     .select(["id", "username"])
     .where("id", "=", id)
     .limit(1)
@@ -67,7 +68,7 @@ export async function insertAccount(
   reg_email: string,
 ) {
   const result = await db
-    .insertInto("acore_auth.account")
+    .insertInto("auth.account")
     .values({
       username,
       salt,
@@ -109,41 +110,32 @@ export async function loadArenaLadder(
   const rankedPlayers = db
     .with("RankedPlayers", (db) =>
       db
-        .selectFrom("arena_team_member as atm")
-        .innerJoin("arena_team as at", "atm.arenaTeamId", "at.arenaTeamId")
-        .innerJoin("characters as c", "atm.guid", "c.guid")
+        .selectFrom("character_arena_stats as cas")
+        .innerJoin("characters as c", "cas.guid", "c.guid")
         .select([
-          "atm.guid",
+          "cas.guid",
           "c.name",
-          sql<number>`MAX(at.rating)`.as("rating"),
-          "at.type as bracket",
+          "cas.personalRating as rating",
+          "cas.slot as bracket",
           "c.race",
           "c.class",
           "c.gender",
-          sql<number>`MAX(atm.seasonWins)`.as("seasonWins"),
-          sql<number>`MAX(atm.seasonGames)`.as("seasonGames"),
-          sql<number>`DENSE_RANK() OVER (PARTITION BY at.type ORDER BY MAX(at.rating) DESC)`.as(
+          "cas.seasonWon as seasonWins",
+          "cas.seasonGames",
+          sql<number>`DENSE_RANK() OVER (PARTITION BY cas.slot ORDER BY cas.personalRating DESC)`.as(
             "rank",
           ),
         ])
-        .groupBy([
-          "atm.guid",
-          "c.name",
-          "at.type",
-          "c.race",
-          "c.class",
-          "c.gender",
-        ]),
+        .where("cas.slot", "=", bracket),
     )
     .with("PlayerCounts", (db) =>
       db
-        .selectFrom("arena_team_member as atm")
-        .innerJoin("arena_team as at", "atm.arenaTeamId", "at.arenaTeamId")
+        .selectFrom("character_arena_stats as cas")
         .select([
-          "at.type as bracket",
-          sql<number>`COUNT(DISTINCT atm.guid)`.as("total_players"),
+          "cas.slot as bracket",
+          sql<number>`COUNT(DISTINCT cas.guid)`.as("total_players"),
         ])
-        .groupBy("at.type"),
+        .groupBy("cas.slot"),
     )
     .with("TitleCutoffs", (db) =>
       db
@@ -160,11 +152,6 @@ export async function loadArenaLadder(
     .with("FinalData", (db) =>
       db
         .selectFrom("RankedPlayers as rp")
-        .leftJoin("character_talent as ct", (join) =>
-          join
-            .onRef("rp.guid", "=", "ct.guid")
-            .on("ct.spell", "in", validSpells),
-        )
         .innerJoin("TitleCutoffs as tc", "rp.bracket", "tc.bracket")
         .select([
           "rp.guid",
@@ -177,17 +164,22 @@ export async function loadArenaLadder(
           "rp.gender",
           "rp.seasonWins",
           "rp.seasonGames",
-          "ct.spell",
+          sql<number>`(
+          SELECT CAST(t.SpellRank1 AS UNSIGNED) FROM character_talent ct
+          INNER JOIN web.talent t ON t.ID = ct.talentId
+          WHERE ct.guid = rp.guid
+          AND CAST(t.SpellRank1 AS UNSIGNED) IN (${sql.join(validSpells)})
+          LIMIT 1
+        )`.as("spell"),
           sql<string>`CASE
-            WHEN rp.rank <= tc.Rank1_Cutoff THEN 'Rank 1'
-            WHEN rp.rank <= tc.Gladiator_Cutoff THEN 'Gladiator'
-            WHEN rp.rank <= tc.Duelist_Cutoff THEN 'Duelist'
-            WHEN rp.rank <= tc.Rival_Cutoff THEN 'Rival'
-            WHEN rp.rank <= tc.Challenger_Cutoff THEN 'Challenger'
-            ELSE 'No Title'
-          END`.as("title"),
-        ])
-        .where("rp.bracket", "=", bracket),
+        WHEN rp.rank <= tc.Rank1_Cutoff THEN 'Rank 1'
+        WHEN rp.rank <= tc.Gladiator_Cutoff THEN 'Gladiator'
+        WHEN rp.rank <= tc.Duelist_Cutoff THEN 'Duelist'
+        WHEN rp.rank <= tc.Rival_Cutoff THEN 'Rival'
+        WHEN rp.rank <= tc.Challenger_Cutoff THEN 'Challenger'
+        ELSE 'No Title'
+      END`.as("title"),
+        ]),
     );
 
   const result = await rankedPlayers
@@ -213,6 +205,7 @@ export async function loadArenaLadder(
     .offset(offset)
     .execute();
 
+  console.dir(result, { depth: null });
   return result;
 }
 
@@ -226,30 +219,55 @@ export async function loadCharacter() {
         .on("inv.bag", "=", 0)
         .on("inv.slot", "<=", 18),
     )
-    .innerJoin(
-      "acore_world.item_template as itemdb",
+    // item_sparse: web + hotfixes
+    .leftJoin("web.item_sparse as itemdb", "itemdb.ID", "item.itemEntry")
+    .leftJoin(
+      "hotfixes.item_sparse as itemdb_hf",
+      "itemdb_hf.ID",
       "item.itemEntry",
-      "itemdb.entry",
     )
+    // item: web + hotfixes
+    .leftJoin("web.item as itemdb2", "itemdb2.ID", "item.itemEntry")
+    .leftJoin("hotfixes.item as itemdb2_hf", "itemdb2_hf.ID", "item.itemEntry")
+    // item_effect: web + hotfixes
+    .leftJoin("web.item_effect as effect", "effect.ParentItemID", "itemdb.ID")
     .leftJoin(
-      "acore_world.db_spell_12340 as spelldb",
-      "itemdb.spellid_1",
-      "spelldb.id",
+      "hotfixes.item_effect as item_effect_hf",
+      "item_effect_hf.ParentItemID",
+      "itemdb.ID",
     )
-    .innerJoin(
-      "acore_world.db_itemdisplayinfo_12340 as itemdisplay",
-      "itemdb.displayid",
-      "itemdisplay.id",
-    )
+    // spell: web + hotfixes
+    .leftJoin("web.spell as spell", "spell.ID", "effect.SpellID")
+    // transmog
     .leftJoin(
-      "custom_transmogrification as transmog",
+      "item_instance_transmog as transmog",
+      "transmog.itemGuid",
       "item.guid",
-      "transmog.guid",
     )
     .leftJoin(
-      "acore_world.item_template as fake_itemdb",
-      "transmog.fakeentry",
-      "fake_itemdb.entry",
+      "web.icon_data as icon",
+      "icon.DataFileID",
+      "itemdb2.IconFileDataID",
+    )
+    .leftJoin(
+      "web.item_modified_appearance as transmogsource",
+      "transmogsource.ID",
+      "transmog.itemModifiedAppearanceAllSpecs",
+    )
+    .leftJoin(
+      "hotfixes.item_modified_appearance as transmogsource_hf",
+      "transmogsource_hf.ID",
+      "transmog.itemModifiedAppearanceAllSpecs",
+    )
+    .leftJoin(
+      "web.item_sparse as transmog_itemdb",
+      "transmog_itemdb.ID",
+      "transmogsource.ItemID",
+    )
+    .leftJoin(
+      "hotfixes.item_sparse as transmog_itemdb_hf",
+      "transmog_itemdb_hf.ID",
+      "transmogsource_hf.ItemID",
     )
     .select([
       "item.guid as item_guid",
@@ -258,100 +276,174 @@ export async function loadCharacter() {
       "item.enchantments",
       "inv.slot",
       "char.guid as char_guid",
-      "itemdb.name as item_name",
-      "fake_itemdb.name as transmogrifyId",
-      "itemdb.quality",
-      "itemdb.flags",
-      "itemdb.itemlevel",
-      "itemdb.class",
-      "itemdb.subclass",
-      "itemdb.inventorytype",
-      "itemdb.armor",
-      "itemdb.dmg_min1",
-      "itemdb.dmg_max1",
-      "itemdb.delay",
-      "itemdb.stat_type1",
-      "itemdb.stat_type2",
-      "itemdb.stat_type3",
-      "itemdb.stat_type4",
-      "itemdb.stat_type5",
-      "itemdb.stat_type6",
-      "itemdb.stat_value1",
-      "itemdb.stat_value2",
-      "itemdb.stat_value3",
-      "itemdb.stat_value4",
-      "itemdb.stat_value5",
-      "itemdb.stat_value6",
-      "itemdb.maxdurability",
-      "itemdb.requiredlevel",
-      "itemdb.socketbonus",
-      "itemdb.allowableclass",
-      "itemdb.displayid as item_displayid",
-      "itemdb.spellid_1",
-      "itemdb.spellid_2",
-      "itemdb.spellid_3",
-      "itemdb.spellid_4",
-      "itemdb.spellid_5",
-      "itemdb.spelltrigger_1",
-      "itemdb.spelltrigger_2",
-      "itemdb.spelltrigger_3",
-      "itemdb.spelltrigger_4",
-      "itemdb.spelltrigger_5",
-      "itemdb.spellcooldown_1",
-      "itemdb.spellcooldown_2",
-      "itemdb.spellcooldown_3",
-      "itemdb.spellcooldown_4",
-      "itemdb.spellcooldown_5",
-      "itemdb.itemset",
-      "itemdb.socketcolor_1",
-      "itemdb.socketcolor_2",
-      "itemdb.socketcolor_3",
-      "itemdb.gemproperties",
-      "itemdisplay.inventoryicon_1 as item_icon",
-      "spelldb.Description_lang_enUS as spell_description",
+
+      // item_sparse - prefer hotfixes
+      sql<string>`COALESCE(itemdb_hf.Display, itemdb.Display)`.as("item_name"),
+      sql<number>`COALESCE(itemdb_hf.OverallQualityID, itemdb.OverallQualityID)`.as(
+        "OverallQualityID",
+      ),
+      sql<number>`COALESCE(itemdb_hf.Flags1, itemdb.Flags1)`.as("Flags1"),
+      sql<number>`COALESCE(itemdb_hf.ItemLevel, itemdb.ItemLevel)`.as(
+        "ItemLevel",
+      ),
+      sql<number>`COALESCE(itemdb_hf.InventoryType, itemdb.InventoryType)`.as(
+        "InventoryType",
+      ),
+      sql<number>`COALESCE(itemdb_hf.Resistances1, itemdb.Resistances1)`.as(
+        "Resistances1",
+      ),
+      sql<number>`COALESCE(itemdb_hf.MinDamage1, itemdb.MinDamage1)`.as(
+        "MinDamage1",
+      ),
+      sql<number>`COALESCE(itemdb_hf.MaxDamage1, itemdb.MaxDamage1)`.as(
+        "MaxDamage1",
+      ),
+      sql<number>`COALESCE(itemdb_hf.ItemDelay, itemdb.ItemDelay)`.as(
+        "ItemDelay",
+      ),
+      sql<number>`COALESCE(itemdb_hf.StatModifierBonusStat1, itemdb.StatModifierBonusStat1)`.as(
+        "StatModifierBonusStat1",
+      ),
+      sql<number>`COALESCE(itemdb_hf.StatModifierBonusStat2, itemdb.StatModifierBonusStat2)`.as(
+        "StatModifierBonusStat2",
+      ),
+      sql<number>`COALESCE(itemdb_hf.StatModifierBonusStat3, itemdb.StatModifierBonusStat3)`.as(
+        "StatModifierBonusStat3",
+      ),
+      sql<number>`COALESCE(itemdb_hf.StatModifierBonusStat4, itemdb.StatModifierBonusStat4)`.as(
+        "StatModifierBonusStat4",
+      ),
+      sql<number>`COALESCE(itemdb_hf.StatModifierBonusStat5, itemdb.StatModifierBonusStat5)`.as(
+        "StatModifierBonusStat5",
+      ),
+      sql<number>`COALESCE(itemdb_hf.StatModifierBonusStat6, itemdb.StatModifierBonusStat6)`.as(
+        "StatModifierBonusStat6",
+      ),
+      sql<number>`COALESCE(itemdb_hf.StatModifierBonusAmount1, itemdb.StatModifierBonusAmount1)`.as(
+        "StatModifierBonusAmount1",
+      ),
+      sql<number>`COALESCE(itemdb_hf.StatModifierBonusAmount2, itemdb.StatModifierBonusAmount2)`.as(
+        "StatModifierBonusAmount2",
+      ),
+      sql<number>`COALESCE(itemdb_hf.StatModifierBonusAmount3, itemdb.StatModifierBonusAmount3)`.as(
+        "StatModifierBonusAmount3",
+      ),
+      sql<number>`COALESCE(itemdb_hf.StatModifierBonusAmount4, itemdb.StatModifierBonusAmount4)`.as(
+        "StatModifierBonusAmount4",
+      ),
+      sql<number>`COALESCE(itemdb_hf.StatModifierBonusAmount5, itemdb.StatModifierBonusAmount5)`.as(
+        "StatModifierBonusAmount5",
+      ),
+      sql<number>`COALESCE(itemdb_hf.StatModifierBonusAmount6, itemdb.StatModifierBonusAmount6)`.as(
+        "StatModifierBonusAmount6",
+      ),
+      sql<number>`COALESCE(itemdb_hf.MaxDurability, itemdb.MaxDurability)`.as(
+        "MaxDurability",
+      ),
+      sql<number>`COALESCE(itemdb_hf.RequiredLevel, itemdb.RequiredLevel)`.as(
+        "RequiredLevel",
+      ),
+      sql<number>`COALESCE(itemdb_hf.SocketMatchEnchantmentID, itemdb.SocketMatchEnchantmentID)`.as(
+        "SocketMatchEnchantmentID",
+      ),
+      sql<number>`COALESCE(itemdb_hf.AllowableClass, itemdb.AllowableClass)`.as(
+        "AllowableClass",
+      ),
+      sql<number>`COALESCE(itemdb_hf.ItemSet, itemdb.ItemSet)`.as("ItemSet"),
+      sql<number>`COALESCE(itemdb_hf.SocketType1, itemdb.SocketType1)`.as(
+        "SocketType1",
+      ),
+      sql<number>`COALESCE(itemdb_hf.SocketType2, itemdb.SocketType2)`.as(
+        "SocketType2",
+      ),
+      sql<number>`COALESCE(itemdb_hf.SocketType3, itemdb.SocketType3)`.as(
+        "SocketType3",
+      ),
+      sql<number>`COALESCE(itemdb_hf.GemProperties, itemdb.GemProperties)`.as(
+        "GemProperties",
+      ),
+
+      // item - prefer hotfixes
+      sql<number>`COALESCE(itemdb2_hf.ClassID, itemdb2.ClassID)`.as("ClassID"),
+      sql<number>`COALESCE(itemdb2_hf.SubClassID, itemdb2.SubClassID)`.as(
+        "SubClassID",
+      ),
+      sql<number>`COALESCE(itemdb2_hf.IconFileDataID, itemdb2.IconFileDataID)`.as(
+        "IconFileDataID",
+      ),
+
+      "icon.IconName",
+
+      // transmog
+      sql<number>`COALESCE(transmogsource_hf.ID, transmogsource.ID)`.as(
+        "transmog_appearance_id",
+      ),
+      sql<number>`COALESCE(transmogsource_hf.ItemID, transmogsource.ItemID)`.as(
+        "transmog_item_id",
+      ),
+      sql<string>`COALESCE(transmog_itemdb_hf.Display, transmog_itemdb.Display)`.as(
+        "transmog_item_name",
+      ),
+
+      "spell.Description",
+      sql<number>`COALESCE(item_effect_hf.TriggerType, effect.TriggerType)`.as(
+        "TriggerType",
+      ),
     ])
-    .where("char.name", "like", `Provimsen`)
+    .where("char.name", "=", "Provimsen")
     .orderBy("inv.slot")
     .execute();
 
   const enchantids = equippedItemsUnenchant.flatMap((item) =>
     item.enchantments
       .split(" ")
-      .filter((i) => i !== "0" && i !== "")
-      .map((i) => parseInt(i)),
+      .filter((i: string) => i !== "0" && i !== "")
+      .map((i: string) => parseInt(i)),
   );
 
   const charInfo = await db
     .selectFrom("characters")
-    .innerJoin(
-      "acore_world.db_chartitles_12340 as title_db",
-      "title_db.mask_id",
+    .leftJoin(
+      "web.char_titles as title_db",
+      "title_db.MaskID",
       "characters.chosenTitle",
     )
-    .innerJoin("character_talent", "characters.guid", "character_talent.guid")
-    .innerJoin("guild_member", "characters.guid", "guild_member.guid")
-    .innerJoin("guild", "guild_member.guildid", "guild.guildid")
+    .leftJoin(
+      "hotfixes.char_titles as title_db_hf",
+      "title_db_hf.MaskID",
+      "characters.chosenTitle",
+    )
+    .leftJoin("guild_member", "characters.guid", "guild_member.guid")
+    .leftJoin("guild", "guild.guildid", "guild_member.guildid")
     .select([
       "characters.name",
       "characters.race",
       "characters.class",
       "characters.level",
       "characters.chosenTitle as title",
-      "title_db.name_lang_enUS as actual_title",
-      "character_talent.spell as spec",
+      sql<string>`COALESCE(title_db_hf.Name, title_db.Name)`.as("actual_title"),
       "guild.name as guild_name",
+      sql<number>`(
+      SELECT ct.talentId FROM character_talent ct
+      INNER JOIN web.talent t ON t.ID = ct.talentId
+      WHERE ct.guid = characters.guid
+      AND CAST(t.SpellRank1 AS UNSIGNED) IN (${sql.join(validSpells)})
+      LIMIT 1
+    )`.as("talent_id"),
+      sql<string>`(
+      SELECT t.SpellRank1 FROM character_talent ct
+      INNER JOIN web.talent t ON t.ID = ct.talentId
+      WHERE ct.guid = characters.guid
+      AND CAST(t.SpellRank1 AS UNSIGNED) IN (${sql.join(validSpells)})
+      LIMIT 1
+    )`.as("spec"),
     ])
-    .where("characters.name", "like", `Provimsen`)
-    .where("character_talent.spell", "in", validSpells)
+    .where("characters.name", "=", "Provimsen")
     .executeTakeFirstOrThrow();
+  console.log("Char Info:", charInfo);
 
   const charStats = await db
     .selectFrom("characters")
-    .innerJoin(
-      "character_stats as charstats",
-      "characters.guid",
-      "charstats.guid",
-    )
     .select([
       "health",
       "power1",
@@ -361,38 +453,201 @@ export async function loadCharacter() {
       "power5",
       "power6",
       "power7",
-      "strength",
-      "agility",
-      "stamina",
-      "intellect",
-      "spirit",
-      "armor",
     ])
-    .where("characters.name", "like", `Provimsen`)
+    .where("name", "=", "Provimsen")
     .executeTakeFirstOrThrow();
 
   const enchants = await db
-    .selectFrom("acore_world.db_spellitemenchantment_12340")
-    .select(["name_lang_enUS as name", "id"])
-    .where("id", "in", enchantids)
+    .selectFrom("web.spell_item_enchantment")
+    .select(["Name as name", "ID as id"])
+    .where("ID", "in", enchantids)
     .execute();
 
-  const enchantsById = Object.fromEntries(
-    enchants.map((enchant) => [enchant.id, enchant]),
-  );
+  const enchantsById: Record<string, { id: number; name: string }> =
+    Object.fromEntries(enchants.map((enchant) => [enchant.id, enchant]));
+
+  type EnchantEntry =
+    | { index: number; id: number; name: string }
+    | { index: number; id?: undefined; name?: undefined };
 
   const equippedItems = equippedItemsUnenchant.map((item) => {
+    const enchantmentEntries: EnchantEntry[] = item.enchantments
+      .split(" ")
+      .map((i: string, index: number): EnchantEntry => {
+        const enchant = enchantsById[i];
+        return { index: index / 3, ...enchant };
+      });
+
     return {
       ...item,
-      enchantments: item.enchantments
-        .split(" ")
-        .map((i, index) => {
-          return { index: index / 3, ...enchantsById[i] };
-        })
-        .filter((i) => i.id),
+      enchantments: enchantmentEntries.filter(
+        (i): i is { index: number; id: number; name: string } => !!i.id,
+      ),
     };
   });
 
+  // collect all unique non-zero set IDs from equipped items
+  const setIds = [
+    ...new Set(
+      equippedItemsUnenchant
+        .map((i) => i.ItemSet)
+        .filter((id) => id && id !== 0),
+    ),
+  ] as number[];
+
+  const itemSets =
+    setIds.length > 0
+      ? await db
+          .selectFrom("web.item_set as iset")
+          .select([
+            "iset.ID",
+            "iset.Name",
+            "iset.ItemID1",
+            "iset.ItemID2",
+            "iset.ItemID3",
+            "iset.ItemID4",
+            "iset.ItemID5",
+            "iset.ItemID6",
+            "iset.ItemID7",
+            "iset.ItemID8",
+            "iset.ItemID9",
+            "iset.ItemID10",
+            "iset.ItemID11",
+            "iset.ItemID12",
+            "iset.ItemID13",
+            "iset.ItemID14",
+            "iset.ItemID15",
+            "iset.ItemID16",
+            "iset.ItemID17",
+          ])
+          .where("iset.ID", "in", setIds)
+          .execute()
+      : [];
+
+  // collect all item IDs referenced by sets so we can look up their names
+  const setItemIds = itemSets.flatMap((s) =>
+    [
+      s.ItemID1,
+      s.ItemID2,
+      s.ItemID3,
+      s.ItemID4,
+      s.ItemID5,
+      s.ItemID6,
+      s.ItemID7,
+      s.ItemID8,
+      s.ItemID9,
+      s.ItemID10,
+      s.ItemID11,
+      s.ItemID12,
+      s.ItemID13,
+      s.ItemID14,
+      s.ItemID15,
+      s.ItemID16,
+      s.ItemID17,
+    ].filter((id) => id !== 0),
+  );
+
+  const setItemNames =
+    setItemIds.length > 0
+      ? await db
+          .selectFrom("web.item_sparse as itemdb")
+          .select(["itemdb.ID", "itemdb.Display as name"])
+          .where("itemdb.ID", "in", setItemIds)
+          .execute()
+      : [];
+
+  const setItemNamesById = Object.fromEntries(
+    setItemNames.map((i) => [i.ID, i.name]),
+  );
+
+  // build structured set info keyed by set ID
+  const equippedItemEntries = new Set(
+    equippedItemsUnenchant.map((i) => i.itemEntry),
+  );
+
+  const itemSetSpells =
+    setIds.length > 0
+      ? await db
+          .selectFrom("web.item_set_spell as iss")
+          .innerJoin("web.spell as sp", "sp.ID", "iss.SpellID")
+          .select([
+            "iss.ID",
+            "iss.SpellID",
+            "iss.Threshold as threshold",
+            "iss.ItemSetID",
+            "sp.Description as description",
+          ])
+          .where("iss.ItemSetID", "in", setIds)
+          .orderBy("iss.Threshold", "asc")
+          .execute()
+      : [];
+
+  const itemSetSpellsBySetId = itemSetSpells.reduce((acc, spell) => {
+    if (!acc[spell.ItemSetID]) acc[spell.ItemSetID] = [];
+    acc[spell.ItemSetID].push(spell);
+    return acc;
+  }, {} as Record<number, typeof itemSetSpells>);
+
+  const itemSetData = Object.fromEntries(
+    itemSets.map((s) => {
+      const fallbackPieceIds = [
+        s.ItemID1,
+        s.ItemID2,
+        s.ItemID3,
+        s.ItemID4,
+        s.ItemID5,
+        s.ItemID6,
+        s.ItemID7,
+        s.ItemID8,
+        s.ItemID9,
+        s.ItemID10,
+        s.ItemID11,
+        s.ItemID12,
+        s.ItemID13,
+        s.ItemID14,
+        s.ItemID15,
+        s.ItemID16,
+        s.ItemID17,
+      ].filter((id) => id !== 0);
+
+      // get all equipped items that belong to this set
+      const equippedSetItems = equippedItemsUnenchant.filter(
+        (item) => item.ItemSet === s.ID,
+      );
+
+      const equippedCount = equippedSetItems.length;
+
+      // match equipped items to fallback slots by index
+      const pieces = fallbackPieceIds.map((fallbackId, idx) => {
+        const fallbackName =
+          setItemNamesById[fallbackId] ?? `Item ${fallbackId}`;
+        const equippedMatch = equippedSetItems[idx];
+
+        return {
+          itemId: fallbackId,
+          name: equippedMatch ? equippedMatch.item_name : fallbackName,
+          equipped: !!equippedMatch,
+        };
+      });
+
+      return [
+        s.ID,
+        {
+          id: s.ID,
+          name: s.Name,
+          equippedCount,
+          pieces,
+          spells: (itemSetSpellsBySetId[s.ID] ?? []).map((spell) => ({
+            spellId: spell.SpellID,
+            threshold: spell.threshold,
+            description: spell.description,
+            active: equippedCount >= spell.threshold,
+          })),
+        },
+      ];
+    }),
+  );
+
   console.dir(equippedItems, { depth: null });
-  return { equippedItems, charInfo, charStats };
+  return { equippedItems, charInfo, charStats, itemSetData };
 }

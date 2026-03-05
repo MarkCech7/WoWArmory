@@ -627,15 +627,15 @@ export const gemIcons: Record<number, string> = {
 export const socketIcons: Record<number, string> = {
   1: "UI-EMPTYSOCKET-META",
   2: "UI-emptysocket-Red",
-  4: "UI-emptysocket-Yellow",
-  8: "UI-emptysocket-Blue",
+  3: "UI-emptysocket-Yellow",
+  4: "UI-emptysocket-Blue",
   14: "UI-EMPTYSOCKET-PRISMATIC",
 };
 
 export const socketNames: Record<number, string> = {
   1: "Meta Socket",
   2: "Red Socket",
-  4: "Yellow Socket",
-  8: "Blue Socket",
+  3: "Yellow Socket",
+  4: "Blue Socket",
   14: "Prismatic Socket",
 };

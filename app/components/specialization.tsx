@@ -186,7 +186,7 @@ export function ArmorySpec(props: { specId: number }) {
       specName = "Beastmastery";
       break;
     case 53209:
-      specName = "Marsksmanship";
+      specName = "Marksmanship";
       break;
     case 53301:
       specName = "Survival";
