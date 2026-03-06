@@ -640,14 +640,14 @@ export default function Armory(props: Route.ComponentProps) {
                   {charStats.intellect}
                 </span>
               </div>
-              <div>
+              {/*<div>
                 Spirit{" "}
                 <span
                   className={charStats.spirit > 1200 ? "text-[#1eff00]" : ""}
                 >
                   {charStats.spirit}
                 </span>
-              </div>
+              </div>*/}
               <div>
                 Armor <span>{charStats.armor}</span>
               </div>

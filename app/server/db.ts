@@ -444,6 +444,11 @@ export async function loadCharacter() {
 
   const charStats = await db
     .selectFrom("characters")
+    .innerJoin(
+      "character_stats as charstats",
+      "characters.guid",
+      "charstats.guid",
+    )
     .select([
       "health",
       "power1",
@@ -453,6 +458,11 @@ export async function loadCharacter() {
       "power5",
       "power6",
       "power7",
+      "strength",
+      "agility",
+      "stamina",
+      "intellect",
+      "armor",
     ])
     .where("name", "=", "Provimsen")
     .executeTakeFirstOrThrow();
