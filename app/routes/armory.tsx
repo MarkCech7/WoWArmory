@@ -49,9 +49,68 @@ type ItemSetInfo = {
   spells: SetSpell[];
 };
 
-export async function loader({ params, request }: Route.LoaderArgs) {
+type Enchantment = { index: number; id: number; name: string };
+
+type EquippedItem = {
+  item_guid: number;
+  itemEntry: number;
+  owner: number;
+  enchantments: Enchantment[];
+  slot: number;
+  char_guid: number;
+  item_name: string;
+  OverallQualityID: number;
+  Flags1: number;
+  ItemLevel: number;
+  InventoryType: number;
+  Resistances1: number;
+  MinDamage1: number;
+  MaxDamage1: number;
+  ItemDelay: number;
+  StatModifierBonusStat1: number;
+  StatModifierBonusStat2: number;
+  StatModifierBonusStat3: number;
+  StatModifierBonusStat4: number;
+  StatModifierBonusStat5: number;
+  StatModifierBonusStat6: number;
+  StatModifierBonusAmount1: number;
+  StatModifierBonusAmount2: number;
+  StatModifierBonusAmount3: number;
+  StatModifierBonusAmount4: number;
+  StatModifierBonusAmount5: number;
+  StatModifierBonusAmount6: number;
+  MaxDurability: number;
+  RequiredLevel: number;
+  SocketMatchEnchantmentID: number;
+  AllowableClass: number;
+  ItemSet: number;
+  SocketType1: number;
+  SocketType2: number;
+  SocketType3: number;
+  GemProperties: number;
+  ClassID: number;
+  SubClassID: number;
+  IconFileDataID: number;
+  IconName: string;
+  transmog_appearance_id: number | null;
+  transmog_item_id: number | null;
+  transmog_item_name: string | null;
+  Description: string | null;
+  TriggerType: number | null;
+};
+
+/*export async function loader({ params, request }: Route.LoaderArgs) {
   let character = await loadCharacter();
   return character;
+}*/
+
+export async function loader({ params, request }: Route.LoaderArgs) {
+  const response = await fetch(
+    `http://127.0.0.1:8000/armory/${params.characterId}`,
+  );
+  if (!response.ok) throw new Error("Character not found");
+  const data = await response.json();
+  return data;
 }
 
 function ArmorSlot(props: {
@@ -131,9 +190,13 @@ function ArmorSlot(props: {
       </div>
     );
   }
-  const enchantments = Object.fromEntries(
-    props.slot.enchantments.map((i) => [i.index, i]),
-  );
+
+  const enchantments: Record<number, Enchantment> = {};
+  props.slot.enchantments.forEach((i: Enchantment) => {
+    enchantments[i.index] = i;
+  });
+
+  console.log("slot:", props.slot.item_name, "slot number:", props.slotNumber);
 
   const hasSocketEnchant = Object.values(enchantments).some(
     //handling Blacksmithing, Eternal belt buckle socket enchants
@@ -428,11 +491,18 @@ function ArmorSlot(props: {
 }
 
 export default function Armory(props: Route.ComponentProps) {
-  let { equippedItems, charInfo, charStats, itemSetData } = props.loaderData;
+  let { equippedItems, charInfo, charStats, itemSetData } =
+    props.loaderData as {
+      equippedItems: EquippedItem[];
+      charInfo: any;
+      charStats: any;
+      itemSetData: Record<string, ItemSetInfo>;
+    };
 
-  const equippedItemsObject = Object.fromEntries(
-    equippedItems.map((item) => [item.slot, item]),
-  );
+  const equippedItemsObject: Record<number, EquippedItem> = {};
+  equippedItems.forEach((item: EquippedItem) => {
+    equippedItemsObject[item.slot] = item;
+  });
 
   let charTitle = charInfo.actual_title;
   let charName = charInfo.name;

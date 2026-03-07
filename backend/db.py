@@ -1,12 +1,12 @@
+import pymysql
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
+load_dotenv()
 
 HOST = os.getenv("DB_HOST")
-PORT = os.getenv("DB_PORT")
+PORT = int(os.getenv("DB_PORT", 3306))
 USER = os.getenv("DB_USER")
 PASSWORD = os.getenv("DB_PASSWORD")
 
@@ -15,15 +15,14 @@ def make_engine(db_name: str):
     return create_engine(url)
 
 engines = {
-    "auth":       make_engine(os.getenv("AUTH_DB", "auth")),
     "characters": make_engine(os.getenv("CHARACTERS_DB", "characters")),
-    "world":      make_engine(os.getenv("WORLD_DB", "world")),
-    "web":        make_engine(os.getenv("WEB_DB", "web")),
+    "auth": make_engine(os.getenv("AUTH_DB", "auth")),
+    "web": make_engine(os.getenv("WEB_DB", "web")),
 }
 
 def query_db(db: str, sql: str) -> str:
     if db not in engines:
-        return f"Unknown database '{db}'. Choose from: auth, characters, world, web."
+        return f"Unknown database '{db}'. Choose from: {', '.join(engines.keys())}"
     
     if not sql.strip().upper().startswith("SELECT"):
         return "Only SELECT queries are allowed."
@@ -45,3 +44,17 @@ def query_db(db: str, sql: str) -> str:
     
     except Exception as e:
         return f"DB Error: {str(e)}"
+
+def rows_to_dicts(result) -> list[dict]:
+    cols = result.keys()
+    return [dict(zip(cols, row)) for row in result.fetchall()]
+
+def get_characters_connection():
+    return pymysql.connect(
+        host=HOST,
+        port=PORT,
+        user=USER,
+        password=PASSWORD,
+        database=os.getenv("CHARACTERS_DB", "characters"),
+        cursorclass=pymysql.cursors.DictCursor
+    )

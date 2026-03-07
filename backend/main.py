@@ -6,6 +6,7 @@ from graph import app_graph
 from rag import index_web_articles
 from contextlib import asynccontextmanager
 import uuid
+from routers import armory
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,6 +21,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(armory.router)
 
 sessions: dict[str, list] = {}
 
