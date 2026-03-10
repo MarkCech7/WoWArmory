@@ -1,10 +1,35 @@
 import { useState, useRef } from "react";
-import { sendMessage, clearSession } from "~/server/ai";
+
+const API_URL = "http://localhost:8000";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
   toolsUsed?: string[];
+}
+
+export interface ChatResponse {
+  reply: string;
+  session_id: string;
+  tools_used: string[];
+}
+
+export async function sendMessage(
+  message: string,
+  sessionId?: string,
+): Promise<ChatResponse> {
+  const res = await fetch(`${API_URL}/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, session_id: sessionId }),
+  });
+
+  if (!res.ok) throw new Error("Agent request failed");
+  return res.json();
+}
+
+export async function clearSession(sessionId: string): Promise<void> {
+  await fetch(`${API_URL}/session/${sessionId}`, { method: "DELETE" });
 }
 
 export default function Chat() {
