@@ -111,12 +111,12 @@ export const getSlotName = (slotNumber: number) => {
 
 export const emptySlotIcon = (slotNumber: number) => {
   const emptySlotIcons: Record<number, string> = {
-    0: "UI-PaperDoll-Slot-Helm",
+    0: "UI-PaperDoll-Slot-Head",
     1: "UI-PaperDoll-Slot-Neck",
     2: "UI-PaperDoll-Slot-Shoulder",
     3: "UI-PaperDoll-Slot-Shirt",
     4: "UI-PaperDoll-Slot-Chest",
-    5: "UI-PaperDoll-Slot-Belt",
+    5: "UI-PaperDoll-Slot-Waist",
     6: "UI-PaperDoll-Slot-Legs",
     7: "UI-PaperDoll-Slot-Feet",
     8: "UI-PaperDoll-Slot-Wrists",

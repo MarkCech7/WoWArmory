@@ -1,5 +1,4 @@
 import type { Route } from "./+types/armory";
-import { loadCharacter } from "~/server/db";
 import ArmoryBackground from "~/components/player-armory-background";
 import { NameColor } from "~/components/class";
 import { ArmoryRace } from "~/components/race";
@@ -48,9 +47,7 @@ type ItemSetInfo = {
   pieces: SetPiece[];
   spells: SetSpell[];
 };
-
 type Enchantment = { index: number; id: number; name: string };
-
 type EquippedItem = {
   item_guid: number;
   itemEntry: number;
@@ -99,11 +96,6 @@ type EquippedItem = {
   TriggerType: number | null;
 };
 
-/*export async function loader({ params, request }: Route.LoaderArgs) {
-  let character = await loadCharacter();
-  return character;
-}*/
-
 export async function loader({ params, request }: Route.LoaderArgs) {
   const response = await fetch(
     `http://127.0.0.1:8000/armory/${params.characterId}`,
@@ -135,45 +127,55 @@ function ArmorSlot(props: {
 
   const SOCKET_ENCHANT_IDS = [3717, 3723, 3729];
 
-  if (!props.slot) {
-    if (props.isCenter === false) {
-      return (
+  if (props.isCenter) {
+    return (
+      <div
+        style={{
+          width: "3.25rem",
+          height: "3.75rem",
+          flexShrink: 0,
+        }}
+      >
         <div
-          className={`flex items-center ${
-            isLeft ? "flex-row" : "flex-row-reverse"
-          }`}
           style={{
-            background: isLeft
-              ? "linear-gradient(to right, rgba(0,0,0,0.85), rgba(0,0,0,0.01))"
-              : "linear-gradient(to right, rgba(0,0,0,0.01), rgba(0,0,0,0.85))",
-            minWidth: "305px",
-            padding: "4px 4px",
+            backgroundImage: `url(/app/assets/icons/${iconToDisplay}.png)`,
+            backgroundSize: "107%",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            width: "100%",
+            height: "100%",
           }}
-        >
-          <div className="w-13 h-13">
-            <div
-              style={{
-                backgroundImage: `url(/app/assets/icons/${iconToDisplay}.png)`,
-                backgroundSize: "107%",
-                backgroundPosition: "center",
-                backgroundRepeat: "no-repeat",
-                width: "100%",
-                height: "100%",
-              }}
-              title={itemName}
-            />
-          </div>
-          <span></span>
-        </div>
-      );
-    }
+          className={
+            props.slot
+              ? `border-1 ${itemBorderColor(
+                  props.slot.OverallQualityID,
+                )} rounded-md`
+              : ""
+          }
+        />
+      </div>
+    );
+  }
+
+  if (!props.slot) {
     return (
       <div
         className={`flex items-center ${
           isLeft ? "flex-row" : "flex-row-reverse"
         }`}
+        style={{
+          background: isLeft
+            ? "linear-gradient(to right, rgba(0,0,0,0.85), rgba(0,0,0,0.01))"
+            : "linear-gradient(to right, rgba(0,0,0,0.01), rgba(0,0,0,0.85))",
+          minWidth: "19rem",
+          height: "3.75rem",
+          fontSize: "0.781rem",
+          padding: "0.25rem 0.25rem",
+          boxSizing: "border-box",
+          gap: "0.3rem",
+        }}
       >
-        <div className="w-13 h-13">
+        <div className="w-13 h-13 flex-shrink-0">
           <div
             style={{
               backgroundImage: `url(/app/assets/icons/${iconToDisplay}.png)`,
@@ -183,10 +185,8 @@ function ArmorSlot(props: {
               width: "100%",
               height: "100%",
             }}
-            title={itemName}
           />
         </div>
-        <span></span>
       </div>
     );
   }
@@ -195,8 +195,6 @@ function ArmorSlot(props: {
   props.slot.enchantments.forEach((i: Enchantment) => {
     enchantments[i.index] = i;
   });
-
-  console.log("slot:", props.slot.item_name, "slot number:", props.slotNumber);
 
   const hasSocketEnchant = Object.values(enchantments).some(
     //handling Blacksmithing, Eternal belt buckle socket enchants
@@ -461,21 +459,22 @@ function ArmorSlot(props: {
             </div>
             <div>
               {props.slot.RequiredLevel
-                ? `Requires level ${props.slot.RequiredLevel} `
+                ? `Requires Level ${props.slot.RequiredLevel} `
                 : null}
             </div>
             <div className="text-wow-uncommon">
               {formatSecondaryStats(props.slot)}
             </div>
             <div className="text-wow-uncommon">
-              {props.slot.Description ? (
-                <div>
-                  {formatSpellTooltip(
-                    props.slot.TriggerType,
-                    props.slot.Description,
-                  )}
-                </div>
-              ) : null}
+              {props.slot.Description
+                ? props.slot.Description.split("||").map(
+                    (desc: string, i: number) => (
+                      <div key={i}>
+                        {formatSpellTooltip(props.slot.TriggerType, desc)}
+                      </div>
+                    ),
+                  )
+                : null}
               {props.slot.ItemSet ? (
                 <ItemSetTooltip
                   setId={props.slot.ItemSet}
@@ -506,7 +505,10 @@ export default function Armory(props: Route.ComponentProps) {
 
   let charTitle = charInfo.actual_title;
   let charName = charInfo.name;
-  charName = charTitle.replace("%s", charName);
+
+  if (charTitle) {
+    charName = charTitle.replace("%s", charName);
+  }
 
   return (
     <div className="max-w-[1300px] mx-auto gap-0.5 mt-5 h-[1400px] bg-content-dark-50 border-t rounded-2xl overflow-hidden">
@@ -632,19 +634,20 @@ export default function Armory(props: Route.ComponentProps) {
               slotNumber={15}
               side="right"
               itemSetData={itemSetData ?? {}}
-            ></ArmorSlot>
+            />
             <ArmorSlot
               slot={equippedItemsObject[16]}
               slotNumber={16}
-              isCenter={true}
+              isCenter={!equippedItemsObject[16]}
+              side="left"
               itemSetData={itemSetData ?? {}}
-            ></ArmorSlot>
+            />
             <ArmorSlot
               slot={equippedItemsObject[17]}
               slotNumber={17}
               side="left"
               itemSetData={itemSetData ?? {}}
-            ></ArmorSlot>
+            />
           </div>
         </div>
       </ArmoryBackground>

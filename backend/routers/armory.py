@@ -208,9 +208,11 @@ def load_character(name: str) -> dict:
                 set_item_names_by_id = {}
                 if set_item_ids:
                     cursor.execute(
-                        f"SELECT ID, Display as name FROM web.item_sparse WHERE ID IN ({','.join(str(i) for i in set_item_ids)})"
+                        f"SELECT ID, InventoryType, Display as name FROM web.item_sparse WHERE ID IN ({','.join(str(i) for i in set_item_ids)})"
                     )
-                    set_item_names_by_id = {row["ID"]: row["name"] for row in cursor.fetchall()}
+                    rows = cursor.fetchall()
+                    set_item_inv_types = {row["ID"]: row["InventoryType"] for row in rows}
+                    set_item_names_by_id = {row["ID"]: row["name"] for row in rows}
 
                 cursor.execute(f"""
                     SELECT iss.ID, iss.SpellID, iss.Threshold as threshold,
@@ -237,15 +239,19 @@ def load_character(name: str) -> dict:
                     ]
                     equipped_count = len(equipped_set_items)
 
+                    # map InventoryType to equipped item
+                    equipped_by_inv_type = {item["InventoryType"]: item for item in equipped_set_items}
+
                     pieces = [
                         {
                             "itemId": fid,
-                            "name": equipped_set_items[idx]["item_name"] if idx < len(equipped_set_items) else set_item_names_by_id.get(fid, f"Item {fid}"),
-                            "equipped": idx < len(equipped_set_items),
+                            "name": equipped_by_inv_type.get(set_item_inv_types.get(fid), {}).get("item_name") 
+                                    or set_item_names_by_id.get(fid, f"Item {fid}"),
+                            "equipped": set_item_inv_types.get(fid) in equipped_by_inv_type,
                         }
-                        for idx, fid in enumerate(fallback_ids)
+                        for fid in fallback_ids
                     ]
-
+                    
                     item_set_data[s["ID"]] = {
                         "id": s["ID"],
                         "name": s["Name"],
