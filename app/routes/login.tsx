@@ -1,61 +1,36 @@
 import type { Route } from "./+types/login";
-import { loadAccount } from "~/server/db";
 import { Form, redirect } from "react-router";
-import { calculateSRP6Verifier } from "~/server/auth";
 import { getSession, commitSession } from "../server/sessions";
-
-function isEqualBytes(bytes1: Uint8Array, bytes2: Uint8Array): boolean {
-  if (bytes1.length !== bytes2.length) {
-    return false;
-  }
-
-  for (let i = 0; i < bytes1.length; i++) {
-    if (bytes1[i] !== bytes2[i]) {
-      return false;
-    }
-  }
-
-  return true;
-}
 
 export async function action({ request }: Route.ActionArgs) {
   let formData = await request.formData();
   let username = formData.get("username");
   let password = formData.get("password");
+
   if (!username || username instanceof File) {
     return { error: "Username is required!" };
-  }
-
-  let account = await loadAccount(username);
-  if (!account) {
-    return { error: "Invalid username or password." };
   }
 
   if (!password || password instanceof File) {
     return { error: "Invalid username or password." };
   }
 
-  let calculatedArrayBuffer = await calculateSRP6Verifier(
-    username,
-    password,
-    account.salt
-  );
+  const response = await fetch("http://127.0.0.1:8000/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
 
-  let calculatedverifier = Buffer.from(calculatedArrayBuffer.buffer);
-  let isSame = isEqualBytes(account.verifier, calculatedverifier);
-
-  if (!isSame) {
+  if (!response.ok) {
     return { error: "Invalid username or password." };
   }
 
-  const session = await getSession(request.headers.get("Cookie"));
+  const account = await response.json();
 
-  session.set("userId", account.id.toString());
-  console.log(account.id);
+  const session = await getSession(request.headers.get("Cookie"));
+  session.set("userId", String(account.id));
   return redirect("/", {
-    headers: {
-      "Set-Cookie": await commitSession(session),
-    },
+    headers: { "Set-Cookie": await commitSession(session) },
   });
 }
 

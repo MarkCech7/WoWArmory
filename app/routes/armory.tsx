@@ -100,8 +100,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const response = await fetch(
     `http://127.0.0.1:8000/armory/${params.characterId}`,
   );
+
   if (!response.ok) throw new Error("Character not found");
   const data = await response.json();
+
   return data;
 }
 

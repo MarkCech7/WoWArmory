@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, text
 load_dotenv()
 
 HOST = os.getenv("DB_HOST")
-PORT = int(os.getenv("DB_PORT", 3306))
+PORT = int(os.getenv("DB_PORT"))
 USER = os.getenv("DB_USER")
 PASSWORD = os.getenv("DB_PASSWORD")
 
@@ -45,9 +45,15 @@ def query_db(db: str, sql: str) -> str:
     except Exception as e:
         return f"DB Error: {str(e)}"
 
-def rows_to_dicts(result) -> list[dict]:
-    cols = result.keys()
-    return [dict(zip(cols, row)) for row in result.fetchall()]
+def get_auth_connection():
+    return pymysql.connect(
+        host=HOST,
+        port=PORT,
+        user=USER,
+        password=PASSWORD,
+        database=os.getenv("AUTH_DB"),
+        cursorclass=pymysql.cursors.DictCursor
+    )
 
 def get_characters_connection():
     return pymysql.connect(
@@ -55,6 +61,12 @@ def get_characters_connection():
         port=PORT,
         user=USER,
         password=PASSWORD,
-        database=os.getenv("CHARACTERS_DB", "characters"),
+        database=os.getenv("CHARACTERS_DB"),
         cursorclass=pymysql.cursors.DictCursor
     )
+
+VALID_SPELLS = [
+    49028, 49184, 48505, 50334, 65139, 53270, 53209, 53301, 44425, 44457, 44572,
+    53563, 53595, 53385, 47540, 47788, 47585, 1329, 51690, 51713, 51490, 51533,
+    61295, 48181, 59672, 50796, 46924, 46917, 46968,
+]

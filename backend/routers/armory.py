@@ -1,14 +1,7 @@
 from fastapi import APIRouter
-from db import get_characters_connection, engines, rows_to_dicts
-from sqlalchemy import text
+from db import get_characters_connection, VALID_SPELLS
 
 router = APIRouter()
-
-VALID_SPELLS = [
-    49028, 49184, 48505, 50334, 65139, 53270, 53209, 53301, 44425, 44457, 44572,
-    53563, 53595, 53385, 47540, 47788, 47585, 1329, 51690, 51713, 51490, 51533,
-    61295, 48181, 59672, 50796, 46924, 46917, 46968,
-]
 
 def load_character(name: str) -> dict:
     valid_spells_sql = ",".join(str(s) for s in VALID_SPELLS)
