@@ -75,12 +75,13 @@ def register(body: dict):
         raise HTTPException(status_code=400, detail="Missing fields")
 
     existing = load_account(username.upper())
+    
     if existing:
         raise HTTPException(status_code=409, detail="Username already exists")
 
     data = get_srp6_registration_data(username, password)
     account_id = insert_account(username, data["salt"], data["verifier"], email)
-    
+
     return {"success": True, "id": account_id}
 
 @router.post("/login")
@@ -92,6 +93,7 @@ def login(body: dict):
         raise HTTPException(status_code=400, detail="Missing fields")
 
     account = load_account(username.upper())
+
     if not account:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
@@ -103,3 +105,11 @@ def login(body: dict):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     return {"success": True, "id": account["id"], "username": account["username"]}
+
+@router.get("/user/{user_id}")
+def get_user(user_id: int):
+    user = get_user_by_id(user_id)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
