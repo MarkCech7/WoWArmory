@@ -50,6 +50,39 @@ def index_web_articles():
     else:
         print("No documents to index.")
 
+def index_character(data: dict):
+    info = data["charInfo"]
+    stats = data["charStats"]
+    items = data["equippedItems"]
+
+    avg_ilvl = round(sum(i["ItemLevel"] for i in items) / len(items))
+
+    text = f"""Character info: {info['name']}
+    Class: {info['class']}, Race: {info['race']}, Level: {info['level']}
+    Guild: {info['guild_name']}
+    Title: {info['actual_title'].replace('%s', info['name'])}
+    Average Item Level: {avg_ilvl}
+    Health: {stats['health']}, Strength: {stats['strength']}, Stamina: {stats['stamina']}, Agility: {stats['agility']}, Intellect: {stats['intellect']}, Armor: {stats['armor']}
+    
+    quipped Items:
+    """ + "\n".join(
+        f"  Slot {i['slot']}: {i['item_name']} (ilvl {i['ItemLevel']})"
+        for i in items
+    )
+
+    doc = Document(
+        page_content=text,
+        metadata={"type": "character", "name": info["name"]}
+    )
+
+    existing = vectorstore.get(where={"name": info["name"]})
+
+    if existing and existing["ids"]:
+        vectorstore.delete(ids=existing["ids"])
+
+    vectorstore.add_documents([doc])
+    print(f"Indexed character: {info['name']}")
+
 
 def similarity_search(query: str, k: int = 5) -> str:
     results = vectorstore.similarity_search(query, k=k)
@@ -60,4 +93,4 @@ def similarity_search(query: str, k: int = 5) -> str:
     return "\n\n".join([
         f"[{doc.metadata.get('type', 'unknown').upper()}] {doc.page_content}"
         for doc in results
-    ])
+    ]) 

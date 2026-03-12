@@ -14,7 +14,7 @@ export interface ChatResponse {
   tools_used: string[];
 }
 
-export async function sendMessage(
+async function sendMessage(
   message: string,
   sessionId?: string,
 ): Promise<ChatResponse> {
@@ -23,16 +23,16 @@ export async function sendMessage(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message, session_id: sessionId }),
   });
-
   if (!res.ok) throw new Error("Agent request failed");
   return res.json();
 }
 
-export async function clearSession(sessionId: string): Promise<void> {
+async function clearSession(sessionId: string): Promise<void> {
   await fetch(`${API_URL}/session/${sessionId}`, { method: "DELETE" });
 }
 
 export default function Chat() {
+  const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,17 +44,12 @@ export default function Chat() {
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
     setLoading(true);
-
     try {
       const res = await sendMessage(userMsg, sessionId.current);
       sessionId.current = res.session_id;
       setMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          content: res.reply,
-          toolsUsed: res.tools_used,
-        },
+        { role: "assistant", content: res.reply, toolsUsed: res.tools_used },
       ]);
     } catch {
       setMessages((prev) => [
@@ -73,57 +68,79 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-xl mx-auto p-4">
-      <div className="flex justify-between mb-4">
-        <h1 className="text-xl font-bold">Chat with Agent</h1>
-        <button
-          onClick={reset}
-          className="text-sm text-red-grey hover:text-red-500"
-        >
-          Clear Chat
-        </button>
-      </div>
+    <>
+      {/* Floating button */}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gray-950 text-black font-bold shadow-lg flex items-center justify-center text-2xl hover:brightness-110"
+        title="Chat with WoW Assistant"
+      >
+        💬
+      </button>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-3 mb-4">
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`p-3 rounded-lg ${
-              msg.role === "user" ? "bg-blue-100 ml-8" : "bg-gray-100 mr-8"
-            }`}
-          >
-            <p>{msg.content}</p>
-            {msg.toolsUsed && msg.toolsUsed.length > 0 && (
-              <p className="text-xs text-gray-400 mt-1">
-                🔧 Tools used: {msg.toolsUsed.join(", ")}
-              </p>
+      {/* Chat panel */}
+      {open && (
+        <div className="fixed bottom-24 right-6 z-50 w-96 h-[500px] flex flex-col rounded-xl shadow-2xl bg-chat-bg border border-chat-border overflow-hidden">
+          {/* Header */}
+          <div className="flex justify-between items-center px-4 py-3 border-b border-chat-border">
+            <span className="text-wow-stagger font-bold">
+              Chat with WoW Assistant
+            </span>
+            <div className="flex gap-3">
+              <button
+                onClick={reset}
+                className="text-xs text-gray-400 hover:text-red-500"
+              >
+                Clear
+              </button>
+              <button
+                onClick={() => setOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            {messages.map((msg, i) => (
+              <div
+                key={i}
+                className={`p-2 rounded-lg text-sm ${
+                  msg.role === "user"
+                    ? "bg-chat-user-msg text-white ml-6"
+                    : "bg-chat-agent-response text-gray-200 mr-6"
+                }`}
+              >
+                {msg.content}
+              </div>
+            ))}
+            {loading && (
+              <div className="bg-gray-800 text-gray-400 p-2 rounded-lg mr-6 text-sm animate-pulse">
+                Thinking...
+              </div>
             )}
           </div>
-        ))}
-        {loading && (
-          <div className="bg-gray-100 p-3 rounded-lg mr-8 animate-pulse">
-            Thinking...
-          </div>
-        )}
-      </div>
 
-      {/* Input */}
-      <div className="flex gap-2">
-        <input
-          className="flex-1 border rounded-lg px-4 py-2"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Ask anything..."
-        />
-        <button
-          onClick={send}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg"
-        >
-          Send
-        </button>
-      </div>
-    </div>
+          {/* Input */}
+          <div className="flex gap-2 p-3 border-t border-chat-border">
+            <input
+              className="flex-1 bg-white/5 text-article-name rounded-lg px-3 py-2 text-sm outline-none"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder="Ask anything..."
+            />
+            <button
+              onClick={send}
+              className="bg-wow-stagger text-black px-3 py-2 rounded-lg text-sm font-bold hover:brightness-110"
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

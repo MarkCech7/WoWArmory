@@ -29,9 +29,18 @@ def search_knowledge_base(query: str) -> str:
     """
     return similarity_search(query)
 
+def search_characters(query: str) -> str:
+    """
+    Search indexed character profiles using semantic similarity.
+    Use this when asked about specific characters, their gear, item level, stats, guild, or title.
+    Example: "what is character's average item level?" or "what gear does character wear?" or "What mainhand weapon does character have equipped?"
+    """
+    return similarity_search(query)
+
 tools = [
     query_auth_db,
     query_characters_db,
     query_world_db,
-    search_knowledge_base
+    search_knowledge_base,
+    search_characters
 ]

@@ -6,7 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-
+import Chat from "~/components/chat";
 import type { Route } from "./+types/root";
 import "./app.css";
 
@@ -34,6 +34,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <Chat />
         <ScrollRestoration />
         <Scripts />
       </body>

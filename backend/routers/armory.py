@@ -1,5 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from db import get_characters_connection, VALID_SPELLS
+from rag import index_character
 
 router = APIRouter()
 
@@ -273,4 +274,10 @@ def load_character(name: str) -> dict:
 
 @router.get("/armory/{name}")
 def get_armory(name: str):
-    return load_character(name)
+    data = load_character(name)
+
+    if not data:
+        raise HTTPException(status_code=404, detail="Character not found")
+    index_character(data)
+    
+    return data

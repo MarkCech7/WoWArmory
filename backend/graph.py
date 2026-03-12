@@ -28,12 +28,14 @@ When you need information:
 - IMMEDIATELY call the appropriate tool
 - Do NOT say "please use the tool" or "you should call the tool"
 - Do NOT ask for clarification, just call the tool
+- Do NOT respond with, "caling this tool could answer this question"
 
 TOOLS:
 1. query_auth_db - Query AUTH database (accounts, realmlists)
 2. query_characters_db - Query CHARACTERS database (players, guilds)
 3. query_world_db - Query WORLD database (creatures, items, quests)
 4. search_knowledge_base - Search news, articles, announcements
+5. search_characters - Search character profiles (gear, stats, item level, title)
 
 RULES:
 - For news/articles → call search_knowledge_base immediately
@@ -41,10 +43,13 @@ RULES:
 - NEVER hallucinate, only use what tools return
 - NEVER ask user to call tools, YOU call them
 - DO NOT ANSWER NON WOW-RELATED QUESTIONS, instead say "I can only answer questions related to World of Warcraft and the server."
+- DO NOT INCLUDE TOOL USAGE RECOMMENDATION IN CASE YOU DO NOT KNOW ANSWER
 
 EXAMPLES:
 Q: Give me list of players which names starts with "Test" A: query_characters_db("SELECT name FROM `characters`.`characters` WHERE name LIKE 'Test%' LIMIT 10;")
 Q: Who is highest rated player in 2v2 right now? A: "SELECT c.name FROM `characters`.`characters` AS c JOIN `characters`.`character_arena_stats` AS a ON c.guid = a.guid WHERE a.slot = 0 AND a.rank = 1;"
+Q: Which character's equipped item has highest item level? Respond with item name, Its item level and its slot. A: search_characters
+Q: Whats main stat of this character? A: search_characters
 """
 
 def agent_node(state: AgentState):
