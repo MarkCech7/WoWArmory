@@ -31,7 +31,7 @@ async function clearSession(sessionId: string): Promise<void> {
   await fetch(`${API_URL}/session/${sessionId}`, { method: "DELETE" });
 }
 
-export default function Chat() {
+export default function Chat({ characterName }: { characterName?: string }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -41,11 +41,14 @@ export default function Chat() {
   const send = async () => {
     if (!input.trim()) return;
     const userMsg = input;
+    const contextualMessage = characterName
+      ? `[Context: User is viewing character "${characterName}"'s armory page] ${userMsg}`
+      : userMsg;
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
     setLoading(true);
     try {
-      const res = await sendMessage(userMsg, sessionId.current);
+      const res = await sendMessage(contextualMessage, sessionId.current);
       sessionId.current = res.session_id;
       setMessages((prev) => [
         ...prev,
