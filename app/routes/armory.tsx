@@ -1,9 +1,6 @@
 import type { Route } from "./+types/armory";
 import ArmoryBackground from "~/components/player-armory-background";
 import { NameColor } from "~/components/class";
-import { ArmoryRace } from "~/components/race";
-import { ArmoryClass } from "~/components/class";
-import { ArmorySpec } from "~/components/specialization";
 import transmogIcon from "~/assets/armory-assets/transmogrify_border.png";
 import { Tooltip } from "radix-ui";
 import {
@@ -363,9 +360,7 @@ function ArmorSlot(props: {
             ) : null}
             <div>Binds when picked up</div>
             <div className="flex flex-row justify-between">
-              <div className="text-gray-300">
-                {getSlotName(props.slot.InventoryType)}
-              </div>
+              <div className="text-gray-300">{props.slot.slot_name}</div>
               <div className="text-gray-300">
                 <ItemClass
                   class={props.slot.ClassID}
@@ -519,11 +514,11 @@ export default function Armory(props: Route.ComponentProps) {
           <div className="">
             <div className="text-3xl font-bold">{charName}</div>
             <div className="pb-3 font-bold text-lg">
-              <NameColor classId={charInfo.class}>
+              <NameColor class={charInfo.class_name}>
                 <span className="font-extrabold">{charInfo.level}</span>{" "}
-                <ArmoryRace raceId={charInfo.race} />{" "}
-                <ArmorySpec specId={Number(charInfo.spec)} />{" "}
-                <ArmoryClass classId={charInfo.class} />
+                <span>{charInfo.race_name}</span>{" "}
+                <span>{charInfo.spec_name}</span>{" "}
+                <span>{charInfo.class_name}</span>
               </NameColor>{" "}
               <span className="text-wow-gold">{charInfo.guild_name}</span>
             </div>

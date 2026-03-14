@@ -64,9 +64,3 @@ def get_characters_connection():
         database=os.getenv("CHARACTERS_DB"),
         cursorclass=pymysql.cursors.DictCursor
     )
-
-VALID_SPELLS = [
-    49028, 49184, 48505, 50334, 65139, 53270, 53209, 53301, 44425, 44457, 44572,
-    53563, 53595, 53385, 47540, 47788, 47585, 1329, 51690, 51713, 51490, 51533,
-    61295, 48181, 59672, 50796, 46924, 46917, 46968,
-]

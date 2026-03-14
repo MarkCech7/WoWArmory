@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException
-from db import get_characters_connection, VALID_SPELLS
+from db import get_characters_connection
 from rag import index_character
+from utils import get_class_name, get_slot_name, get_race_name
 
 router = APIRouter()
 
 def load_character(name: str) -> dict:
-    valid_spells_sql = ",".join(str(s) for s in VALID_SPELLS)
 
     conn = get_characters_connection()
     try:
@@ -115,7 +115,9 @@ def load_character(name: str) -> dict:
                     enchant = enchants_by_id.get(int(part))
                     if enchant:
                         enchantments.append({"index": idx / 3, **enchant})
-                equipped_items.append({**item, "enchantments": enchantments})
+                new_item = ({**item, "enchantments": enchantments})
+                new_item["slot_name"] = get_slot_name(item["InventoryType"])
+                equipped_items.append(new_item)
 
             # char info
             cursor.execute(f"""
@@ -128,17 +130,25 @@ def load_character(name: str) -> dict:
                     COALESCE(title_db_hf.Name, title_db.Name) as actual_title,
                     guild.name as guild_name,
                     (
-                        SELECT ct.talentId FROM characters.character_talent ct
-                        INNER JOIN web.talent t ON t.ID = ct.talentId
+                        SELECT tt.Name
+                        FROM characters.character_talent ct
+                        INNER JOIN web.talent t ON t.ID = ct.TalentID
+                        INNER JOIN web.talent_tab tt ON tt.ID = t.TabID
                         WHERE ct.guid = characters.guid
-                        AND CAST(t.SpellRank1 AS UNSIGNED) IN ({valid_spells_sql})
+                        AND ct.TalentGroup = 0
+                        GROUP BY tt.ID, tt.Name
+                        ORDER BY SUM(ct.Rank + 1) DESC
                         LIMIT 1
-                    ) as talent_id,
+                    ) as spec_name,
                     (
-                        SELECT CAST(t.SpellRank1 AS UNSIGNED) FROM characters.character_talent ct
-                        INNER JOIN web.talent t ON t.ID = ct.talentId
+                        SELECT tt.ID
+                        FROM characters.character_talent ct
+                        INNER JOIN web.talent t ON t.ID = ct.TalentID
+                        INNER JOIN web.talent_tab tt ON tt.ID = t.TabID
                         WHERE ct.guid = characters.guid
-                        AND CAST(t.SpellRank1 AS UNSIGNED) IN ({valid_spells_sql})
+                        AND ct.TalentGroup = 0
+                        GROUP BY tt.ID
+                        ORDER BY SUM(ct.Rank + 1) DESC
                         LIMIT 1
                     ) as spec
                 FROM characters.characters
@@ -149,6 +159,11 @@ def load_character(name: str) -> dict:
                 WHERE characters.name = %s
             """, (name,))
             char_info = cursor.fetchone()
+            if char_info:
+                char_info["race_name"] = get_race_name(char_info["race"])
+                char_info["class_name"] = get_class_name(char_info["class"])
+                char_info["spec_name"] = char_info["spec_name"] or ""
+                char_info["spec"] = char_info["spec"] or ""
 
             cursor.execute("""
                 SELECT

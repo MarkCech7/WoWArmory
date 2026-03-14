@@ -54,19 +54,25 @@ def index_character(data: dict):
     info = data["charInfo"]
     stats = data["charStats"]
     items = data["equippedItems"]
+    selected_title = info.get("actual_title")
+    title = "Character does not have selected title"
 
     avg_ilvl = round(sum(i["ItemLevel"] for i in items) / len(items))
 
+    if selected_title:
+        title = selected_title.replace("%s", "")
+    
     text = f"""Character info: {info['name']}
     Class: {info['class']}, Race: {info['race']}, Level: {info['level']}
     Guild: {info['guild_name']}
-    Title: {info['actual_title'].replace('%s', info['name'])}
+    Title: {title}
+    Specialization: {info['spec_name']}
     Average Item Level: {avg_ilvl}
     Health: {stats['health']}, Strength: {stats['strength']}, Stamina: {stats['stamina']}, Agility: {stats['agility']}, Intellect: {stats['intellect']}, Armor: {stats['armor']}
     
-    quipped Items:
+    equipped Items:
     """ + "\n".join(
-        f"  Slot {i['slot']}: {i['item_name']} (ilvl {i['ItemLevel']})"
+        f"  Slot {i['slot_name']}: {i['item_name']} (ilvl {i['ItemLevel']})"
         for i in items
     )
 

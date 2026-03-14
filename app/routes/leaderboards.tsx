@@ -15,10 +15,11 @@ type ArenaPlayer = {
   rank: number;
   race: number;
   class: number;
+  className: string;
   gender: number;
   seasonWins: number;
   seasonGames: number;
-  spell: number | null;
+  spec: number | null;
   title: string;
   total_count: number;
 };
@@ -137,12 +138,12 @@ export default function Leaderboard(props: Route.ComponentProps) {
                   <TableCell>
                     <div className="flex justify-center">
                       <CharRace raceId={player.race} gender={player.gender} />
-                      <Class classId={player.class} />
-                      <Spec specId={Number(player.spell)} />
+                      <Class class={player.className} />
+                      <Spec specId={Number(player.spec)} />
                     </div>
                   </TableCell>
                   <TableCell>
-                    <NameColor classId={player.class}>
+                    <NameColor class={player.className}>
                       <div className="pl-4">{player.name}</div>
                     </NameColor>
                   </TableCell>

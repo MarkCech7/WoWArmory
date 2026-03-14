@@ -1,5 +1,6 @@
 from fastapi import APIRouter
-from db import get_characters_connection, VALID_SPELLS
+from db import get_characters_connection
+from utils import get_class_name
 
 router = APIRouter()
 
@@ -7,7 +8,6 @@ def load_arena_ladder(bracket: int, limit: int, offset: int):
     conn = get_characters_connection()
     try:
         with conn.cursor() as cursor:
-            valid_spells_sql = ",".join(str(s) for s in VALID_SPELLS)
             cursor.execute(f"""
                 WITH RankedPlayers AS (
                     SELECT
@@ -55,13 +55,27 @@ def load_arena_ladder(bracket: int, limit: int, offset: int):
                         rp.seasonWins,
                         rp.seasonGames,
                         (
-                            SELECT CAST(t.SpellRank1 AS UNSIGNED)
+                            SELECT tt.Name
                             FROM character_talent ct
-                            INNER JOIN web.talent t ON t.ID = ct.talentId
+                            INNER JOIN web.talent t ON t.ID = ct.TalentID
+                            INNER JOIN web.talent_tab tt ON tt.ID = t.TabID
                             WHERE ct.guid = rp.guid
-                            AND CAST(t.SpellRank1 AS UNSIGNED) IN ({valid_spells_sql})
+                            AND ct.TalentGroup = 0
+                            GROUP BY tt.ID, tt.Name
+                            ORDER BY SUM(ct.Rank + 1) DESC
                             LIMIT 1
-                        ) AS spell,
+                        ) AS specName,
+                        (
+                            SELECT tt.ID
+                            FROM character_talent ct
+                            INNER JOIN web.talent t ON t.ID = ct.TalentID
+                            INNER JOIN web.talent_tab tt ON tt.ID = t.TabID
+                            WHERE ct.guid = rp.guid
+                            AND ct.TalentGroup = 0
+                            GROUP BY tt.ID
+                            ORDER BY SUM(ct.Rank + 1) DESC
+                            LIMIT 1
+                        ) AS spec,
                         CASE
                             WHEN rp.rank <= tc.Rank1_Cutoff THEN 'Rank 1'
                             WHEN rp.rank <= tc.Gladiator_Cutoff THEN 'Gladiator'
@@ -84,14 +98,22 @@ def load_arena_ladder(bracket: int, limit: int, offset: int):
                     gender,
                     seasonWins,
                     seasonGames,
-                    spell,
+                    spec,
+                    specName,
                     title,
                     (SELECT COUNT(*) FROM FinalData) AS total_count
                 FROM FinalData
                 ORDER BY rating DESC, rank
                 LIMIT %s OFFSET %s
             """, (bracket, limit, offset))
-            return cursor.fetchall()
+            char_info = cursor.fetchall()
+            for row in char_info:
+                row["className"] = get_class_name(row["class"])
+                row["specName"] = row["specName"] or ""
+                row["spec"] = row["spec"] or ""     
+
+            return char_info
+        
     finally:
         conn.close()
 
