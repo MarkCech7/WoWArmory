@@ -1,5 +1,4 @@
 import type { Route } from "./+types/leaderboards";
-import { loadArenaLadder } from "~/server/db";
 import { redirect, NavLink } from "react-router";
 import { CharRace, Faction } from "~/components/race";
 import { Class, NameColor } from "~/components/class";
@@ -7,6 +6,23 @@ import { Spec } from "~/components/specialization";
 import { RankIcon } from "~/components/cutoffs";
 import { SearchBox } from "./home";
 import type { ReactNode } from "react";
+
+type ArenaPlayer = {
+  guid: number;
+  name: string;
+  rating: number;
+  bracket: number;
+  rank: number;
+  race: number;
+  class: number;
+  className: string;
+  gender: number;
+  seasonWins: number;
+  seasonGames: number;
+  spec: number | null;
+  title: string;
+  total_count: number;
+};
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   let ladderType: number;
@@ -16,15 +32,21 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   let offset = (page - 1) * limit;
 
   if (params.type === "2v2") {
-    ladderType = 2;
+    ladderType = 0;
   } else if (params.type === "3v3") {
-    ladderType = 3;
+    ladderType = 1;
   } else {
     return redirect("/leaderboards/2v2");
   }
-  let ladder = await loadArenaLadder(ladderType, limit, offset);
+
+  const response = await fetch(
+    `http://127.0.0.1:8000/arenaladder/${ladderType}?limit=${limit}&offset=${offset}`,
+  );
+
+  const ladder = await response.json();
   let totalPlayers = ladder.length > 0 ? ladder[0].total_count : 0;
   let totalPages = Math.ceil(totalPlayers / limit);
+
   return { ladder, totalPages, page };
 }
 
@@ -105,49 +127,51 @@ export default function Leaderboard(props: Route.ComponentProps) {
             </tr>
           </thead>
           <tbody>
-            {props.loaderData.ladder.map((player, index) => (
-              <tr key={index}>
-                <TableCell>
-                  <div className="text-center font-medium text-rating">
-                    {player.rank}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex justify-center">
-                    <CharRace raceId={player.race} gender={player.gender} />
-                    <Class classId={player.class} />
-                    <Spec specId={player.spell} />
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <NameColor classId={player.class}>
-                    <div className="pl-4">{player.name}</div>
-                  </NameColor>
-                </TableCell>
-                <TableCell>
-                  <div className="flex justify-center">
-                    <Faction raceId={player.race} />
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <RankIcon title={player.title}>
-                    <div className="text-rating font-medium">
-                      {player.rating}
+            {props.loaderData.ladder.map(
+              (player: ArenaPlayer, index: number) => (
+                <tr key={index}>
+                  <TableCell>
+                    <div className="text-center font-medium text-rating">
+                      {player.rank}
                     </div>
-                  </RankIcon>
-                </TableCell>
-                <TableCell>
-                  <div className="text-wins text-center">
-                    {player.seasonWins}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="text-losses text-center">
-                    {player.seasonGames - player.seasonWins}
-                  </div>
-                </TableCell>
-              </tr>
-            ))}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-center">
+                      <CharRace raceId={player.race} gender={player.gender} />
+                      <Class class={player.className} />
+                      <Spec specId={Number(player.spec)} />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <NameColor class={player.className}>
+                      <div className="pl-4">{player.name}</div>
+                    </NameColor>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-center">
+                      <Faction raceId={player.race} />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <RankIcon title={player.title}>
+                      <div className="text-rating font-medium">
+                        {player.rating}
+                      </div>
+                    </RankIcon>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-wins text-center">
+                      {player.seasonWins}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-losses text-center">
+                      {player.seasonGames - player.seasonWins}
+                    </div>
+                  </TableCell>
+                </tr>
+              ),
+            )}
           </tbody>
         </table>
         <div className="flex justify-end w-full pt-2 pb-2">

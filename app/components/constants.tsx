@@ -111,12 +111,12 @@ export const getSlotName = (slotNumber: number) => {
 
 export const emptySlotIcon = (slotNumber: number) => {
   const emptySlotIcons: Record<number, string> = {
-    0: "UI-PaperDoll-Slot-Helm",
+    0: "UI-PaperDoll-Slot-Head",
     1: "UI-PaperDoll-Slot-Neck",
     2: "UI-PaperDoll-Slot-Shoulder",
     3: "UI-PaperDoll-Slot-Shirt",
     4: "UI-PaperDoll-Slot-Chest",
-    5: "UI-PaperDoll-Slot-Belt",
+    5: "UI-PaperDoll-Slot-Waist",
     6: "UI-PaperDoll-Slot-Legs",
     7: "UI-PaperDoll-Slot-Feet",
     8: "UI-PaperDoll-Slot-Wrists",
@@ -627,15 +627,15 @@ export const gemIcons: Record<number, string> = {
 export const socketIcons: Record<number, string> = {
   1: "UI-EMPTYSOCKET-META",
   2: "UI-emptysocket-Red",
-  4: "UI-emptysocket-Yellow",
-  8: "UI-emptysocket-Blue",
+  3: "UI-emptysocket-Yellow",
+  4: "UI-emptysocket-Blue",
   14: "UI-EMPTYSOCKET-PRISMATIC",
 };
 
 export const socketNames: Record<number, string> = {
   1: "Meta Socket",
   2: "Red Socket",
-  4: "Yellow Socket",
-  8: "Blue Socket",
+  3: "Yellow Socket",
+  4: "Blue Socket",
   14: "Prismatic Socket",
 };

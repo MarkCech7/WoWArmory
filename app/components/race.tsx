@@ -128,44 +128,6 @@ export function Faction(props: { raceId: number }) {
   return <img className="w-7 h-7" src={src} alt={alt} />;
 }
 
-export function ArmoryRace(props: { raceId: number }) {
-  let raceName = "";
-
-  switch (props.raceId) {
-    case 1:
-      raceName = "Human";
-      break;
-    case 2:
-      raceName = "Orc";
-      break;
-    case 3:
-      raceName = "Dwarf";
-      break;
-    case 4:
-      raceName = "Night Elf";
-      break;
-    case 5:
-      raceName = "Undead";
-      break;
-    case 6:
-      raceName = "Tauren";
-      break;
-    case 7:
-      raceName = "Gnome";
-      break;
-    case 8:
-      raceName = "Troll";
-      break;
-    case 10:
-      raceName = "Blood Elf";
-      break;
-    case 11:
-      raceName = "Draenei";
-      break;
-  }
-  return <span>{raceName}</span>;
-}
-
 /* faction
 0 - alliance
 1 - horde */
@@ -174,16 +136,3 @@ export function ArmoryRace(props: { raceId: number }) {
 0 - male 
 1 - female
 */
-
-/*Races                     
-1  - Human
-2  - Orc
-3  - Dwarf
-4  - Night elf
-5  - Undead
-6  - Tauren
-7  - Gnome
-8  - Troll
-10 - Blood elf
-11 - Draenei
- */

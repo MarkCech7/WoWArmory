@@ -8,8 +8,6 @@ import ssoftheday from "~/assets/other/WoWScrnShot_040723_193841.jpg";
 import featuredVideo from "~/assets/other/featured-video-thumb2.png";
 import pvpBackground2 from "~/assets/other/Arena-world-of-warcraft-screen.webp";
 import { getSession } from "~/server/sessions";
-import { getUserById } from "~/server/db";
-import Chat from "~/components/chat";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -21,10 +19,16 @@ export function meta({}: Route.MetaArgs) {
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const userId = session.get("userId");
+
   if (!userId) {
     return { user: null };
   }
-  let user = await getUserById(parseInt(userId));
+
+  const response = await fetch(`http://127.0.0.1:8000/user/${userId}`);
+
+  if (!response.ok) return { user: null };
+  const user = await response.json();
+
   return { user };
 }
 
@@ -233,7 +237,6 @@ export default function Home(props: Route.ComponentProps) {
             isLast="True"
           />
         </div>
-        <Chat />
       </div>
     </div>
   );

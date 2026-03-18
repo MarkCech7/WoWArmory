@@ -10,47 +10,47 @@ import warlock from "~/assets/class/warlock.webp";
 import druid from "~/assets/class/druid.webp";
 import type { ReactNode } from "react";
 
-export function Class(props: { classId: number }) {
+export function Class(props: { class: string }) {
   let src = "";
   let alt = "";
-  switch (props.classId) {
-    case 1:
+  switch (props.class) {
+    case "Warrior":
       src = warrior;
       alt = "Warrior";
       break;
-    case 2:
+    case "Paladin":
       src = paladin;
       alt = "Paladin";
       break;
-    case 3:
+    case "Hunter":
       src = hunter;
       alt = "Hunter";
       break;
-    case 4:
+    case "Rogue":
       src = rogue;
       alt = "Rogue";
       break;
-    case 5:
+    case "Priest":
       src = priest;
       alt = "Priest";
       break;
-    case 6:
+    case "DeathKnight":
       src = dk;
       alt = "Death Knight";
       break;
-    case 7:
+    case "Shaman":
       src = shaman;
       alt = "Shaman";
       break;
-    case 8:
+    case "Mage":
       src = mage;
       alt = "Mage";
       break;
-    case 9:
+    case "Warlock":
       src = warlock;
       alt = "Warlock";
       break;
-    case 11:
+    case "Druid":
       src = druid;
       alt = "Druid";
       break;
@@ -58,90 +58,39 @@ export function Class(props: { classId: number }) {
   return <img className="w-7 h-7" src={src} alt={alt} />;
 }
 
-export function NameColor(props: { classId: number; children: ReactNode }) {
+export function NameColor(props: { class: string; children: ReactNode }) {
   let classColor = "";
-  switch (props.classId) {
-    case 1:
+  switch (props.class) {
+    case "Warrior":
       classColor = "text-class-warrior";
       break;
-    case 2:
+    case "Paladin":
       classColor = "text-class-paladin";
       break;
-    case 3:
+    case "Hunter":
       classColor = "text-class-hunter";
       break;
-    case 4:
+    case "Rogue":
       classColor = "text-class-rogue";
       break;
-    case 5:
+    case "Priest":
       classColor = "text-class-priest";
       break;
-    case 6:
+    case "DeathKnight":
       classColor = "text-class-deathknight";
       break;
-    case 7:
+    case "Shaman":
       classColor = "text-class-shaman";
       break;
-    case 8:
+    case "Mage":
       classColor = "text-class-mage";
       break;
-    case 9:
+    case "Warlock":
       classColor = "text-class-warlock";
       break;
-    case 11:
+    case "Druid":
       classColor = "text-class-druid";
       break;
   }
   return <span className={classColor}>{props.children}</span>;
 }
-
-export function ArmoryClass(props: { classId: number }) {
-  let className = "";
-
-  switch (props.classId) {
-    case 1:
-      className = "Warrior";
-      break;
-    case 2:
-      className = "Paladin";
-      break;
-    case 3:
-      className = "Hunter";
-      break;
-    case 4:
-      className = "Rogue";
-      break;
-    case 5:
-      className = "Priest";
-      break;
-    case 6:
-      className = "Death Knight";
-      break;
-    case 7:
-      className = "Shaman";
-      break;
-    case 8:
-      className = "Mage";
-      break;
-    case 10:
-      className = "Warlock";
-      break;
-    case 11:
-      className = "Druid";
-      break;
-  }
-  return <span>{className}</span>;
-}
-
-/*classes
-1 - Warrior
-2 - Paladin
-3 - Hunter
-4 - Rogue
-5 - Priest
-6 - DK
-7 - Shaman
-8 - Mage
-9 - Warlock
-11 - Druid
-*/

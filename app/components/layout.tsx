@@ -1,6 +1,5 @@
 import logo from "~/assets/other/logo.png";
 import { Outlet, NavLink } from "react-router";
-import { getUserById } from "~/server/db";
 import { getSession } from "~/server/sessions";
 import type { Route } from "./+types/layout";
 import searchIcon from "~/assets/other/search-icon-2044x2048-psdrpqwp.png";
@@ -14,10 +13,16 @@ import { FollowUsIcon } from "./follow-us-icon";
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const userId = session.get("userId");
+
   if (!userId) {
     return { user: null };
   }
-  let user = await getUserById(parseInt(userId));
+
+  const response = await fetch(`http://127.0.0.1:8000/user/${userId}`);
+
+  if (!response.ok) return { user: null };
+  const user = await response.json();
+
   return { user };
 }
 

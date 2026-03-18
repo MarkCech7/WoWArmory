@@ -13,5 +13,6 @@ app/assets
 backend/venv/
 __pycache__/
 .env
-chroma_db/
+chroma_db_articles/
+chroma_db_characters/
 oldcode.py

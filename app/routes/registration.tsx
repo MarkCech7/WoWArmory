@@ -1,12 +1,6 @@
 import type { Route } from "./+types/registration";
-import { insertAccount } from "~/server/db";
 import { Form, redirect } from "react-router";
-import { getSRP6RegistrationData } from "~/server/auth";
 import { getSession, commitSession } from "../server/sessions";
-
-function isNodeError(error: unknown): error is NodeJS.ErrnoException {
-  return error instanceof Error && "code" in error;
-}
 
 export async function action({ request }: Route.ActionArgs) {
   let formData = await request.formData();
@@ -35,30 +29,27 @@ export async function action({ request }: Route.ActionArgs) {
     return { error: "Email is required!" };
   }
 
-  let { salt, verifier } = await getSRP6RegistrationData(username, password);
-  let calculatedverifier = Buffer.from(verifier.buffer);
+  const response = await fetch("http://127.0.0.1:8000/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password, email }),
+  });
 
-  try {
-    let id = await insertAccount(username, salt, calculatedverifier, email);
+  if (response.status === 409) {
+    return { error: "Username or email already taken!" };
+  }
 
-    if (!id) {
-      return { error: "Failed to create account!" };
-    }
-
-    const session = await getSession(request.headers.get("Cookie"));
-
-    session.set("userId", id.toString());
-    return redirect("/", {
-      headers: {
-        "Set-Cookie": await commitSession(session),
-      },
-    });
-  } catch (error) {
-    if (isNodeError(error) && error.code === "ER_DUP_ENTRY") {
-      return { error: "Username or email already taken!" };
-    }
+  if (!response.ok) {
     return { error: "Failed to create account!" };
   }
+
+  const account = await response.json();
+
+  const session = await getSession(request.headers.get("Cookie"));
+  session.set("userId", String(account.id));
+  return redirect("/", {
+    headers: { "Set-Cookie": await commitSession(session) },
+  });
 }
 
 export default function Register({ actionData }: Route.ComponentProps) {

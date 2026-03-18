@@ -16,7 +16,7 @@ const { getSession, commitSession, destroySession } =
       maxAge: 60,
       path: "/",
       sameSite: "lax",
-      secrets: ["s3cret1"], //TODO use env variable
+      secrets: [process.env.SECRET!],
       secure: true,
     },
   });

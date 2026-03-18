@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage, SystemMessage
 from graph import app_graph
 from rag import index_web_articles
 from contextlib import asynccontextmanager
 import uuid
+from routers import armory, leaderboards, auth
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,11 +22,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-sessions: dict[str, list] = {}
+app.include_router(armory.router)
+app.include_router(leaderboards.router)
+app.include_router(auth.router)
+
+sessions: dict[str, dict] = {}
 
 class ChatRequest(BaseModel):
     message: str
     session_id: str | None = None
+    context: str | None = None
 
 class ChatResponse(BaseModel):
     reply: str
@@ -34,11 +40,21 @@ class ChatResponse(BaseModel):
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-
     session_id = request.session_id or str(uuid.uuid4())
-    history = sessions.get(session_id, [])
+    session = sessions.get(session_id, {"history": [], "context": None})
 
-    history.append(HumanMessage(content=request.message))
+    if request.context:
+        session["context"] = request.context
+
+    context = session["context"]
+    history = session["history"]
+
+    message = request.message
+    if context:
+        message = f"{context} {request.message}"
+
+    history.append(HumanMessage(content=message))
+    sessions[session_id] = session
 
     try:
         result = app_graph.invoke({
@@ -49,7 +65,8 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
     updated_messages = result["messages"]
-    sessions[session_id] = updated_messages
+    session["history"] = updated_messages
+    sessions[session_id] = session
 
     last_reply = ""
     tools_used = []

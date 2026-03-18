@@ -1,10 +1,6 @@
 import type { Route } from "./+types/armory";
-import { loadCharacter } from "~/server/db";
 import ArmoryBackground from "~/components/player-armory-background";
 import { NameColor } from "~/components/class";
-import { ArmoryRace } from "~/components/race";
-import { ArmoryClass } from "~/components/class";
-import { ArmorySpec } from "~/components/specialization";
 import transmogIcon from "~/assets/armory-assets/transmogrify_border.png";
 import { Tooltip } from "radix-ui";
 import {
@@ -21,6 +17,7 @@ import {
   formatPrimaryStats,
   formatSecondaryStats,
   formatSpellTooltip,
+  ItemSetTooltip,
 } from "~/components/item";
 import {
   getSlotName,
@@ -31,12 +28,82 @@ import {
   classBitmask,
   socketNames,
 } from "~/components/constants";
+import { useChatContext } from "~/components/chat";
+import { useEffect } from "react";
 
 type SlotData = Route.ComponentProps["loaderData"]["equippedItems"][number];
+type SetSpell = {
+  spellId: number;
+  threshold: number;
+  description: string;
+  active: boolean;
+};
+type SetPiece = { itemId: number; name: string; equipped: boolean };
+type ItemSetInfo = {
+  id: number;
+  name: string;
+  equippedCount: number;
+  pieces: SetPiece[];
+  spells: SetSpell[];
+};
+type Enchantment = { index: number; id: number; name: string };
+type EquippedItem = {
+  item_guid: number;
+  itemEntry: number;
+  owner: number;
+  enchantments: Enchantment[];
+  slot: number;
+  char_guid: number;
+  item_name: string;
+  OverallQualityID: number;
+  Flags1: number;
+  ItemLevel: number;
+  InventoryType: number;
+  Resistances1: number;
+  MinDamage1: number;
+  MaxDamage1: number;
+  ItemDelay: number;
+  StatModifierBonusStat1: number;
+  StatModifierBonusStat2: number;
+  StatModifierBonusStat3: number;
+  StatModifierBonusStat4: number;
+  StatModifierBonusStat5: number;
+  StatModifierBonusStat6: number;
+  StatModifierBonusAmount1: number;
+  StatModifierBonusAmount2: number;
+  StatModifierBonusAmount3: number;
+  StatModifierBonusAmount4: number;
+  StatModifierBonusAmount5: number;
+  StatModifierBonusAmount6: number;
+  MaxDurability: number;
+  RequiredLevel: number;
+  SocketMatchEnchantmentID: number;
+  AllowableClass: number;
+  ItemSet: number;
+  SocketType1: number;
+  SocketType2: number;
+  SocketType3: number;
+  GemProperties: number;
+  ClassID: number;
+  SubClassID: number;
+  IconFileDataID: number;
+  IconName: string;
+  transmog_appearance_id: number | null;
+  transmog_item_id: number | null;
+  transmog_item_name: string | null;
+  Description: string | null;
+  TriggerType: number | null;
+};
 
 export async function loader({ params, request }: Route.LoaderArgs) {
-  let character = await loadCharacter();
-  return character;
+  const response = await fetch(
+    `http://127.0.0.1:8000/armory/${params.characterId}`,
+  );
+
+  if (!response.ok) throw new Error("Character not found");
+  const data = await response.json();
+
+  return data;
 }
 
 function ArmorSlot(props: {
@@ -44,61 +111,72 @@ function ArmorSlot(props: {
   slotNumber: number;
   side?: "left" | "right";
   isCenter?: boolean;
+  itemSetData: Record<number, ItemSetInfo>;
 }) {
   const iconToDisplay = props.slot
-    ? props.slot.item_icon
+    ? props.slot.IconName
     : emptySlotIcon(props.slotNumber);
 
   const itemName = props.slot ? props.slot.item_name : `Empty slot`;
   const isLeft = props.side === "left";
 
   const baseSocketColors = [
-    props.slot?.socketcolor_1,
-    props.slot?.socketcolor_2,
-    props.slot?.socketcolor_3,
+    props.slot?.SocketType1,
+    props.slot?.SocketType2,
+    props.slot?.SocketType3,
   ].filter(Boolean) as number[];
 
   const SOCKET_ENCHANT_IDS = [3717, 3723, 3729];
 
-  if (!props.slot) {
-    if (props.isCenter === false) {
-      return (
+  if (props.isCenter) {
+    return (
+      <div
+        style={{
+          width: "3.25rem",
+          height: "3.75rem",
+          flexShrink: 0,
+        }}
+      >
         <div
-          className={`flex items-center ${
-            isLeft ? "flex-row" : "flex-row-reverse"
-          }`}
           style={{
-            background: isLeft
-              ? "linear-gradient(to right, rgba(0,0,0,0.85), rgba(0,0,0,0.01))"
-              : "linear-gradient(to right, rgba(0,0,0,0.01), rgba(0,0,0,0.85))",
-            minWidth: "305px",
-            padding: "4px 4px",
+            backgroundImage: `url(/app/assets/icons/${iconToDisplay}.png)`,
+            backgroundSize: "107%",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            width: "100%",
+            height: "100%",
           }}
-        >
-          <div className="w-13 h-13">
-            <div
-              style={{
-                backgroundImage: `url(/app/assets/icons/${iconToDisplay}.png)`,
-                backgroundSize: "107%",
-                backgroundPosition: "center",
-                backgroundRepeat: "no-repeat",
-                width: "100%",
-                height: "100%",
-              }}
-              title={itemName}
-            />
-          </div>
-          <span></span>
-        </div>
-      );
-    }
+          className={
+            props.slot
+              ? `border-1 ${itemBorderColor(
+                  props.slot.OverallQualityID,
+                )} rounded-md`
+              : ""
+          }
+        />
+      </div>
+    );
+  }
+
+  if (!props.slot) {
     return (
       <div
         className={`flex items-center ${
           isLeft ? "flex-row" : "flex-row-reverse"
         }`}
+        style={{
+          background: isLeft
+            ? "linear-gradient(to right, rgba(0,0,0,0.85), rgba(0,0,0,0.01))"
+            : "linear-gradient(to right, rgba(0,0,0,0.01), rgba(0,0,0,0.85))",
+          minWidth: "19rem",
+          height: "3.75rem",
+          fontSize: "0.781rem",
+          padding: "0.25rem 0.25rem",
+          boxSizing: "border-box",
+          gap: "0.3rem",
+        }}
       >
-        <div className="w-13 h-13">
+        <div className="w-13 h-13 flex-shrink-0">
           <div
             style={{
               backgroundImage: `url(/app/assets/icons/${iconToDisplay}.png)`,
@@ -108,20 +186,20 @@ function ArmorSlot(props: {
               width: "100%",
               height: "100%",
             }}
-            title={itemName}
           />
         </div>
-        <span></span>
       </div>
     );
   }
-  const enchantments = Object.fromEntries(
-    props.slot.enchantments.map((i) => [i.index, i])
-  );
+
+  const enchantments: Record<number, Enchantment> = {};
+  props.slot.enchantments.forEach((i: Enchantment) => {
+    enchantments[i.index] = i;
+  });
 
   const hasSocketEnchant = Object.values(enchantments).some(
     //handling Blacksmithing, Eternal belt buckle socket enchants
-    (e) => e && SOCKET_ENCHANT_IDS.includes(e.id)
+    (e) => e && SOCKET_ENCHANT_IDS.includes(e.id),
   );
 
   const socketColors = hasSocketEnchant
@@ -168,10 +246,10 @@ function ArmorSlot(props: {
                   height: "100%",
                 }}
                 className={`border-1 ${itemBorderColor(
-                  props.slot.quality
+                  props.slot.OverallQualityID,
                 )} rounded-md`}
               />
-              {props.slot.transmogrifyId && (
+              {props.slot.transmog_item_name && (
                 <img
                   src="/app/assets/armory-assets/transmogrify_border.png"
                   alt="Transmogrified"
@@ -191,7 +269,7 @@ function ArmorSlot(props: {
           >
             <span
               className={`${getQualityTextColor(
-                props.slot.quality
+                props.slot.OverallQualityID,
               )} whitespace-nowrap [text-shadow:0_0_4px_black]`}
             >
               {itemName}
@@ -219,7 +297,7 @@ function ArmorSlot(props: {
                   marginLeft: isLeft ? "0" : "0.15rem",
                 }}
               >
-                {props.slot.itemlevel}
+                {props.slot.ItemLevel}
               </span>
               <div
                 style={{
@@ -240,7 +318,7 @@ function ArmorSlot(props: {
                     >
                       {getGemIconById(enchantments[i]?.id, socketColors[idx])}
                     </div>
-                  ) : null
+                  ) : null,
                 )}
               </div>
             </div>
@@ -254,13 +332,13 @@ function ArmorSlot(props: {
           >
             <div
               className={`${getQualityTextColor(
-                props.slot.quality
+                props.slot.OverallQualityID,
               )} text-[14px]`}
             >
               {props.slot.item_name}
             </div>
             <div className="text-wow-uncommon">
-              {isHeroic(props.slot.flags) && (
+              {isHeroic(props.slot.Flags1) && (
                 <span
                   className={
                     getSeasonalText(props.slot.itemEntry)
@@ -273,47 +351,48 @@ function ArmorSlot(props: {
               )}
             </div>
             <div className="text-wow-gold">
-              Item Level {props.slot.itemlevel}
+              Item Level {props.slot.ItemLevel}
             </div>
-            {props.slot.transmogrifyId ? (
+            {props.slot.transmog_item_name ? (
               <div className="text-wow-transmog">
                 Transmogrified to:
                 <br />
-                {props.slot.transmogrifyId}
+                {props.slot.transmog_item_name}
               </div>
             ) : null}
             <div>Binds when picked up</div>
             <div className="flex flex-row justify-between">
-              <div className="text-gray-300">
-                {getSlotName(props.slot.inventorytype)}
-              </div>
+              <div className="text-gray-300">{props.slot.slot_name}</div>
               <div className="text-gray-300">
                 <ItemClass
-                  class={props.slot.class}
-                  subClass={props.slot.subclass}
+                  class={props.slot.ClassID}
+                  subClass={props.slot.SubClassID}
                 />
               </div>
             </div>
             <div>
-              {props.slot.armor ? (
-                <div> {props.slot.armor.toLocaleString("en-US")} Armor</div>
+              {props.slot.Resistances1 ? (
+                <div>
+                  {" "}
+                  {props.slot.Resistances1.toLocaleString("en-US")} Armor
+                </div>
               ) : null}
             </div>
             <div>
-              {props.slot.dmg_min1 && props.slot.dmg_max1 ? (
+              {props.slot.MinDamage1 && props.slot.MaxDamage1 ? (
                 <div>
                   <div className="flex flex-row justify-between">
                     <div>
-                      {props.slot.dmg_min1.toLocaleString("en-US")} -{" "}
-                      {props.slot.dmg_max1.toLocaleString("en-US")} Damage{" "}
+                      {props.slot.MinDamage1.toLocaleString("en-US")} -{" "}
+                      {props.slot.MaxDamage1.toLocaleString("en-US")} Damage{" "}
                     </div>
-                    <div>{calculateWeaponSpeed(props.slot.delay)}</div>
+                    <div>{calculateWeaponSpeed(props.slot.ItemDelay)}</div>
                   </div>
                   <div>
                     {calculateWeaponDPS(
-                      props.slot.dmg_min1,
-                      props.slot.dmg_max1,
-                      props.slot.delay
+                      props.slot.MinDamage1,
+                      props.slot.MaxDamage1,
+                      props.slot.ItemDelay,
                     )}
                   </div>
                 </div>
@@ -357,9 +436,10 @@ function ArmorSlot(props: {
                 </div>
               ) : (
                 <div className="text-wow-gray">
-                  {props.slot.socketbonus ? (
+                  {props.slot.SocketMatchEnchantmentID ? (
                     <>
-                      Socket Bonus: {getGemBonusById(props.slot.socketbonus)}
+                      Socket Bonus:{" "}
+                      {getGemBonusById(props.slot.SocketMatchEnchantmentID)}
                       <div className="pb-[10px]" />
                     </>
                   ) : null}
@@ -367,31 +447,38 @@ function ArmorSlot(props: {
               )}
             </div>
             <div>
-              {props.slot.maxdurability
-                ? `Durability: ${props.slot.maxdurability} /${" "}
-              ${props.slot.maxdurability}`
+              {props.slot.MaxDurability
+                ? `Durability: ${props.slot.MaxDurability} /${" "}
+              ${props.slot.MaxDurability}`
                 : null}
             </div>
             <div>
-              {getAllowedClasses(props.slot.allowableclass, classBitmask) ||
+              {getAllowedClasses(props.slot.AllowableClass, classBitmask) ||
                 null}
             </div>
             <div>
-              {props.slot.requiredlevel
-                ? `Requires level ${props.slot.requiredlevel} `
+              {props.slot.RequiredLevel
+                ? `Requires Level ${props.slot.RequiredLevel} `
                 : null}
             </div>
             <div className="text-wow-uncommon">
               {formatSecondaryStats(props.slot)}
             </div>
             <div className="text-wow-uncommon">
-              {props.slot.spell_description ? (
-                <div>
-                  {formatSpellTooltip(
-                    props.slot.spelltrigger_1,
-                    props.slot.spell_description
-                  )}
-                </div>
+              {props.slot.Description
+                ? props.slot.Description.split("||").map(
+                    (desc: string, i: number) => (
+                      <div key={i}>
+                        {formatSpellTooltip(props.slot.TriggerType, desc)}
+                      </div>
+                    ),
+                  )
+                : null}
+              {props.slot.ItemSet ? (
+                <ItemSetTooltip
+                  setId={props.slot.ItemSet}
+                  itemSetData={props.itemSetData}
+                />
               ) : null}
             </div>
           </Tooltip.Content>
@@ -402,15 +489,32 @@ function ArmorSlot(props: {
 }
 
 export default function Armory(props: Route.ComponentProps) {
-  let { equippedItems, charInfo, charStats } = props.loaderData;
+  let { equippedItems, charInfo, charStats, itemSetData } =
+    props.loaderData as {
+      equippedItems: EquippedItem[];
+      charInfo: any;
+      charStats: any;
+      itemSetData: Record<string, ItemSetInfo>;
+    };
 
-  const equippedItemsObject = Object.fromEntries(
-    equippedItems.map((item) => [item.slot, item])
-  );
+  const { setCharacterName } = useChatContext();
+
+  useEffect(() => {
+    setCharacterName(charInfo.name);
+    return () => setCharacterName(undefined);
+  }, [charInfo.name]);
+
+  const equippedItemsObject: Record<number, EquippedItem> = {};
+  equippedItems.forEach((item: EquippedItem) => {
+    equippedItemsObject[item.slot] = item;
+  });
 
   let charTitle = charInfo.actual_title;
   let charName = charInfo.name;
-  charName = charTitle.replace("%s", charName);
+
+  if (charTitle) {
+    charName = charTitle.replace("%s", charName);
+  }
 
   return (
     <div className="max-w-[1300px] mx-auto gap-0.5 mt-5 h-[1400px] bg-content-dark-50 border-t rounded-2xl overflow-hidden">
@@ -419,11 +523,11 @@ export default function Armory(props: Route.ComponentProps) {
           <div className="">
             <div className="text-3xl font-bold">{charName}</div>
             <div className="pb-3 font-bold text-lg">
-              <NameColor classId={charInfo.class}>
+              <NameColor class={charInfo.class_name}>
                 <span className="font-extrabold">{charInfo.level}</span>{" "}
-                <ArmoryRace raceId={charInfo.race} />{" "}
-                <ArmorySpec specId={charInfo.spec} />{" "}
-                <ArmoryClass classId={charInfo.class} />
+                <span>{charInfo.race_name}</span>{" "}
+                <span>{charInfo.spec_name}</span>{" "}
+                <span>{charInfo.class_name}</span>
               </NameColor>{" "}
               <span className="text-wow-gold">{charInfo.guild_name}</span>
             </div>
@@ -434,41 +538,49 @@ export default function Armory(props: Route.ComponentProps) {
                 slot={equippedItemsObject[0]}
                 slotNumber={0}
                 side="left"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[1]}
                 slotNumber={1}
                 side="left"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[2]}
                 slotNumber={2}
                 side="left"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[14]}
                 slotNumber={14}
                 side="left"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[4]}
                 slotNumber={4}
                 side="left"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[3]}
                 slotNumber={3}
                 side="left"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[18]}
                 slotNumber={18}
                 side="left"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[8]}
                 slotNumber={8}
                 side="left"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
             </div>
             <div className="flex flex-col gap-0.5">
@@ -476,41 +588,49 @@ export default function Armory(props: Route.ComponentProps) {
                 slot={equippedItemsObject[9]}
                 slotNumber={9}
                 side="right"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[5]}
                 slotNumber={5}
                 side="right"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[6]}
                 slotNumber={6}
                 side="right"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[7]}
                 slotNumber={7}
                 side="right"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[10]}
                 slotNumber={10}
                 side="right"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[11]}
                 slotNumber={11}
                 side="right"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[12]}
                 slotNumber={12}
                 side="right"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[13]}
                 slotNumber={13}
                 side="right"
+                itemSetData={itemSetData ?? {}}
               ></ArmorSlot>
             </div>
           </div>
@@ -519,17 +639,21 @@ export default function Armory(props: Route.ComponentProps) {
               slot={equippedItemsObject[15]}
               slotNumber={15}
               side="right"
-            ></ArmorSlot>
+              itemSetData={itemSetData ?? {}}
+            />
             <ArmorSlot
               slot={equippedItemsObject[16]}
               slotNumber={16}
-              isCenter={true}
-            ></ArmorSlot>
+              isCenter={!equippedItemsObject[16]}
+              side="left"
+              itemSetData={itemSetData ?? {}}
+            />
             <ArmorSlot
               slot={equippedItemsObject[17]}
               slotNumber={17}
               side="left"
-            ></ArmorSlot>
+              itemSetData={itemSetData ?? {}}
+            />
           </div>
         </div>
       </ArmoryBackground>
@@ -595,14 +719,14 @@ export default function Armory(props: Route.ComponentProps) {
                   {charStats.intellect}
                 </span>
               </div>
-              <div>
+              {/*<div>
                 Spirit{" "}
                 <span
                   className={charStats.spirit > 1200 ? "text-[#1eff00]" : ""}
                 >
                   {charStats.spirit}
                 </span>
-              </div>
+              </div>*/}
               <div>
                 Armor <span>{charStats.armor}</span>
               </div>
