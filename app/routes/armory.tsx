@@ -28,6 +28,8 @@ import {
   classBitmask,
   socketNames,
 } from "~/components/constants";
+import { useChatContext } from "~/components/chat";
+import { useEffect } from "react";
 
 type SlotData = Route.ComponentProps["loaderData"]["equippedItems"][number];
 type SetSpell = {
@@ -494,6 +496,13 @@ export default function Armory(props: Route.ComponentProps) {
       charStats: any;
       itemSetData: Record<string, ItemSetInfo>;
     };
+
+  const { setCharacterName } = useChatContext();
+
+  useEffect(() => {
+    setCharacterName(charInfo.name);
+    return () => setCharacterName(undefined);
+  }, [charInfo.name]);
 
   const equippedItemsObject: Record<number, EquippedItem> = {};
   equippedItems.forEach((item: EquippedItem) => {

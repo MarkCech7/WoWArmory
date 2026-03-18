@@ -9,6 +9,7 @@ import {
 import Chat from "~/components/chat";
 import type { Route } from "./+types/root";
 import "./app.css";
+import { ChatProvider } from "~/components/chat";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -34,7 +35,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        <Chat />
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -43,7 +43,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <ChatProvider>
+      <Outlet />
+      <Chat />
+    </ChatProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

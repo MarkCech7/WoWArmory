@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+"use client";
+import { useState, useRef, createContext, useContext } from "react";
 
 const API_URL = "http://localhost:8000";
 
@@ -17,11 +18,12 @@ export interface ChatResponse {
 async function sendMessage(
   message: string,
   sessionId?: string,
+  context?: string,
 ): Promise<ChatResponse> {
   const res = await fetch(`${API_URL}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, session_id: sessionId }),
+    body: JSON.stringify({ message, session_id: sessionId, context }),
   });
   if (!res.ok) throw new Error("Agent request failed");
   return res.json();
@@ -31,7 +33,26 @@ async function clearSession(sessionId: string): Promise<void> {
   await fetch(`${API_URL}/session/${sessionId}`, { method: "DELETE" });
 }
 
-export default function Chat({ characterName }: { characterName?: string }) {
+const ChatContext = createContext<{
+  characterName?: string;
+  setCharacterName: (name?: string) => void;
+}>({ setCharacterName: () => {} });
+
+export function ChatProvider({ children }: { children: React.ReactNode }) {
+  const [characterName, setCharacterName] = useState<string | undefined>();
+  return (
+    <ChatContext.Provider value={{ characterName, setCharacterName }}>
+      {children}
+    </ChatContext.Provider>
+  );
+}
+
+export function useChatContext() {
+  return useContext(ChatContext);
+}
+
+export default function Chat() {
+  const { characterName } = useChatContext();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -41,14 +62,17 @@ export default function Chat({ characterName }: { characterName?: string }) {
   const send = async () => {
     if (!input.trim()) return;
     const userMsg = input;
-    const contextualMessage = characterName
-      ? `[Context: User is viewing character "${characterName}"'s armory page] ${userMsg}`
-      : userMsg;
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
     setLoading(true);
     try {
-      const res = await sendMessage(contextualMessage, sessionId.current);
+      const res = await sendMessage(
+        userMsg,
+        sessionId.current,
+        characterName
+          ? `When I say "this character" or ask about a character without naming one, I mean "${characterName}". Search for "${characterName}" specifically.`
+          : undefined,
+      );
       sessionId.current = res.session_id;
       setMessages((prev) => [
         ...prev,

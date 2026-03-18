@@ -1,6 +1,8 @@
 from langchain_core.tools import tool
 from db import query_db
-from rag import similarity_search
+from rag import similarity_search_articles, similarity_search_characters
+
+
 
 @tool
 def query_auth_db(sql: str) -> str:
@@ -19,28 +21,31 @@ def query_world_db(sql: str) -> str:
     return query_db("world", sql)
 
 @tool
-def search_knowledge_base(query: str) -> str:
+def search_articles_knowledge_base(query: str) -> str:
     """
     Search the WoW server base using semantic similarity.
     Use this when the user asks general questions about:
     - highest rated players, guilds with most members
     - anything that needs fuzzy/semantic search rather than exact SQL
-    Example: "who was highest rated restoration druid in season 2?" or "which guild has the most members?"
+    Example: "who was highest rated restoration druid in season 2?" or "which guild has the most members?" or "Give me information about latest article." or "Give me brief summary of latest server news."
     """
-    return similarity_search(query)
+    return similarity_search_articles(query)
 
-def search_characters(query: str) -> str:
+@tool  
+def search_characters_knowledge_base(query: str) -> str:
     """
-    Search indexed character profiles using semantic similarity.
-    Use this when asked about specific characters, their gear, item level, stats, guild, or title.
-    Example: "what is character's average item level?" or "what gear does character wear?" or "What mainhand weapon does character have equipped?"
+    Search indexed character profiles only.
+    Use this ONLY when asked about a specific player's gear, stats, item level, 
+    title, guild, or specialization.
+    Do NOT use this for news, patch notes, or server announcements.
+    Input must be a plain text search query string, for example: "Provimsen items"
     """
-    return similarity_search(query)
+    return similarity_search_characters(query)
 
 tools = [
     query_auth_db,
     query_characters_db,
     query_world_db,
-    search_knowledge_base,
-    search_characters
+    search_characters_knowledge_base,
+    search_articles_knowledge_base,
 ]
