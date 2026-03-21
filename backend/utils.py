@@ -52,6 +52,9 @@ RACE_NAMES = {
     11: "Draenei",
 }
 
+ALLIANCE_RACES = {1, 3, 4, 7, 11}  # Human, Dwarf, Night Elf, Gnome, Draenei
+HORDE_RACES = {2, 5, 6, 8, 10}     # Orc, Undead, Tauren, Troll, Blood Elf
+
 def get_class_name(class_id: int) -> str:
     return CLASS_NAMES.get(class_id, "")
 

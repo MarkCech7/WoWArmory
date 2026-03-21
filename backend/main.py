@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from langchain_core.messages import HumanMessage, AIMessage, ToolMessage, SystemMessage
+from langchain_core.messages import HumanMessage, AIMessage
 from graph import app_graph
 from rag import index_web_articles
 from contextlib import asynccontextmanager
@@ -59,27 +59,35 @@ async def chat(request: ChatRequest):
     try:
         result = app_graph.invoke({
             "messages": history,
-            "session_id": session_id
+            "session_id": session_id,
+            "direct": False
         })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
     updated_messages = result["messages"]
-    session["history"] = updated_messages
+    last = updated_messages[-1]
+    tools_used = [
+        call["name"]
+        for msg in updated_messages
+        if hasattr(msg, "tool_calls")
+        for call in msg.tool_calls
+    ]
+
+    if last.__class__.__name__ == "ToolMessage":
+        # return_direct tool - store as AIMessage so history stays clean
+        last_reply = last.content
+        synthetic_ai = AIMessage(content=last_reply)
+        session["history"] = history + [synthetic_ai]
+    else:
+        last_reply = next(
+            (m.content for m in reversed(updated_messages)
+             if m.__class__.__name__ == "AIMessage" and m.content),
+            ""
+        )
+        session["history"] = updated_messages
+
     sessions[session_id] = session
-
-    last_reply = ""
-    tools_used = []
-    for msg in reversed(updated_messages):
-        if isinstance(msg, AIMessage) and msg.content:
-            last_reply = msg.content
-            break
-
-    if not last_reply:
-        for msg in reversed(updated_messages):
-            if isinstance(msg, ToolMessage):
-                last_reply = msg.content
-                break
 
     return ChatResponse(
         reply=last_reply,

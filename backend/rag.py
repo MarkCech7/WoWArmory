@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from langchain_ollama import OllamaEmbeddings
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
-from db import query_db
+from db import query_web_db
 import os
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
@@ -26,7 +26,7 @@ characters_vectorstore = Chroma(
 
 def index_web_articles():
     documents = []
-    articles = query_db("web", "SELECT name, text FROM web_article")
+    articles = query_web_db("SELECT name, text FROM web_article")
     print(articles)
     lines = articles.split("\n")
     print(f"Indexing {len(lines) - 1} articles.")
@@ -91,7 +91,7 @@ def index_character(data: dict):
     characters_vectorstore.add_documents([doc])
     print(f"Indexed character: {name}")
 
-def similarity_search_articles(query: str, k: int = 5) -> str:
+def similarity_search_articles(query: str, k: int = 3) -> str:
     results = articles_vectorstore.similarity_search(query, k=k)
 
     if not results:
@@ -101,7 +101,7 @@ def similarity_search_articles(query: str, k: int = 5) -> str:
         f"[ARTICLE] {doc.page_content}" for doc in results
     ])
 
-def similarity_search_characters(query: str, k: int = 5) -> str:
+def similarity_search_characters(query: str, k: int = 1) -> str:
     results = characters_vectorstore.similarity_search(query, k=k)
 
     if not results:

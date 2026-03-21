@@ -70,7 +70,7 @@ export default function Chat() {
         userMsg,
         sessionId.current,
         characterName
-          ? `When I say "this character" or ask about a character without naming one, I mean "${characterName}". Search for "${characterName}" specifically.`
+          ? `When I say "this character" or ask about a character without naming one, I mean "${characterName}". Search for "${characterName}" specifically using search_characters_knowledge_base.`
           : undefined,
       );
       sessionId.current = res.session_id;
