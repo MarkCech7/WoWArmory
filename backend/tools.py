@@ -231,11 +231,11 @@ def get_character_armory_url(name: str) -> str:
     if not result or result == "No results found.":
         phrase = character_not_found_chain.invoke({"name": name})
 
-        return f"{phrase}\nPlease try to search for character <a href=\"http://localhost:5173/armory/\">here</a>."
+        return f"{phrase}\nPlease try to search for a character <a href=\"http://localhost:5173/armory/\">here</a>."
 
     phrase = character_found_chain.invoke({"name": name})
 
-    return f"{phrase}\nTo view {name}'s click <a href=\"http://localhost:5173/armory/{name}\">here</a>."
+    return f"{phrase}\nTo view {name}'s armory click <a href=\"http://localhost:5173/armory/{name}\">here</a>."
 
 @tool(return_direct=True)
 def get_arena_leaderboards_url(query: str) -> str:
