@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, createContext, useContext } from "react";
+import xss from "xss";
 
 const API_URL = "http://localhost:8000";
 
@@ -44,6 +45,29 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     <ChatContext.Provider value={{ characterName, setCharacterName }}>
       {children}
     </ChatContext.Provider>
+  );
+}
+
+function renderMessageContent(content: string) {
+  const sanitized = xss(content, {
+    whiteList: {
+      a: ["href", "target", "title"],
+    },
+    onTagAttr: (tag, name, value) => {
+      if (tag === "a" && name === "href") {
+        if (value.startsWith("/")) {
+          return `${name}="${value}"`;
+        }
+        return `${name}="#"`;
+      }
+    },
+  });
+
+  return (
+    <span
+      dangerouslySetInnerHTML={{ __html: sanitized }}
+      className="[&_a]:text-wow-gold [&_a]:hover:brightness-125 [&_a]:cursor-pointer"
+    />
   );
 }
 
@@ -140,7 +164,9 @@ export default function Chat() {
                     : "bg-chat-agent-response text-gray-200 mr-6"
                 }`}
               >
-                {msg.content}
+                {msg.role === "user"
+                  ? msg.content
+                  : renderMessageContent(msg.content)}
               </div>
             ))}
             {loading && (
