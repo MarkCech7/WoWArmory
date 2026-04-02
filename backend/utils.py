@@ -54,6 +54,8 @@ RACE_NAMES = {
 
 ALLIANCE_RACES = {1, 3, 4, 7, 11}  # Human, Dwarf, Night Elf, Gnome, Draenei
 HORDE_RACES = {2, 5, 6, 8, 10}     # Orc, Undead, Tauren, Troll, Blood Elf
+GEAR_SLOTS = {0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17}
+TWO_HAND_INVENTORY_TYPE = {17} 
 
 def get_class_name(class_id: int) -> str:
     return CLASS_NAMES.get(class_id, "")
@@ -63,3 +65,27 @@ def get_slot_name(slot_id: int) -> str:
 
 def get_race_name(race_id: int) -> str:
     return RACE_NAMES.get(race_id, "")
+
+def compute_average_item_level(equipped_items: list[dict]) -> float:
+    ilvl_by_slot = {
+        item["slot"]: item["ItemLevel"]
+        for item in equipped_items
+        if item["slot"] in GEAR_SLOTS
+    }
+
+    total = 0
+
+    for slot in GEAR_SLOTS:
+        ilvl = ilvl_by_slot.get(slot, 0)
+        total += ilvl
+
+    # 2H weapon: also add its ilvl for the offhand slot
+    two_hander = next(
+        (item for item in equipped_items if item["InventoryType"] in TWO_HAND_INVENTORY_TYPE),
+        None
+    )
+
+    if two_hander:
+        total += two_hander["ItemLevel"]
+
+    return int(total / len(GEAR_SLOTS))

@@ -60,17 +60,15 @@ def index_character(data: dict):
     info = data["charInfo"]
     stats = data["charStats"]
     items = data["equippedItems"]
+    average_item_level = data["average_item_level"]
     selected_title = info.get("actual_title")
     name = info['name']
-
-    avg_ilvl = round(sum(i["ItemLevel"] for i in items) / len(items))
-
     title_text = f"{name}'s title is {selected_title.replace('%s', "").strip()}" if selected_title else f"{name} does not have a selected title"
 
     text = f"""{name} is a level {info['level']} {info['race_name']} {info['spec_name']} {info['class_name']}.
     {name} is a member of the guild {info['guild_name']}.
     {title_text}
-    {name}'s average item level is {avg_ilvl}.
+    {name}'s average item level is {average_item_level}.
     {name}'s stats: Health {stats['health']}, Strength {stats['strength']}, Stamina {stats['stamina']}, Agility {stats['agility']}, Intellect {stats['intellect']}, Armor {stats['armor']}.
 
     {name}'s equipped items:

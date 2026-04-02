@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from db import get_characters_connection
 from rag import index_character
-from utils import get_class_name, get_slot_name, get_race_name
+from utils import get_class_name, get_slot_name, get_race_name, compute_average_item_level
 
 router = APIRouter()
 
@@ -179,12 +179,43 @@ def load_character(name: str) -> dict:
                     cs.agility,
                     cs.stamina,
                     cs.intellect,
-                    cs.armor
+                    cs.spirit,
+                    cs.armor,
+                    cs.resArcane as res_arcane,
+                    cs.resFire as res_fire,
+                    cs.resFrost as res_frost,
+                    cs.resNature as res_nature,
+                    cs.resShadow as res_shadow,
+                    cs.blockPct as block_pct,
+                    cs.dodgePct as dodge_pct,
+                    cs.parryPct as parry_pct,
+                    cs.critPct as crit_pct,
+                    cs.rangedCritPct as ranged_crit_pct,
+                    cs.spellCritPct as spell_crit_pct,
+                    cs.attackPower as attack_power,
+                    cs.rangedAttackPower as ranged_attack_power,
+                    cs.spellPower as spell_power
                 FROM characters.characters c
                 LEFT JOIN characters.character_stats cs ON cs.guid = c.guid
                 WHERE c.name = %s
             """, (name,))
             char_stats = cursor.fetchone()
+
+            cursor.execute("""
+                SELECT
+                    cs.skill,
+                    cs.value,
+                    cs.max,
+                    cs.professionSlot as profession_slot,
+                    sl.DisplayName as skill_name,
+                    sl.CategoryID as category_id,
+                    icon.IconName as icon_name
+                FROM characters.character_skills cs
+                LEFT JOIN web.skill_line sl ON sl.ID = cs.skill
+                LEFT JOIN web.icon_data icon ON icon.DataFileID = sl.SpellIconFileID
+                WHERE cs.guid = (SELECT guid FROM characters.characters WHERE name = %s)
+            """, (name,))
+            char_skills = cursor.fetchall()
 
             # item sets
             set_ids = list({
@@ -285,6 +316,8 @@ def load_character(name: str) -> dict:
         "charStats": char_stats,
         "equippedItems": equipped_items,
         "itemSetData": item_set_data,
+        "average_item_level": compute_average_item_level(equipped_items),
+        "char_skills": char_skills
     }
 
 @router.get("/armory/{name}")
