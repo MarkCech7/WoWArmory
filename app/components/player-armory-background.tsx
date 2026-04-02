@@ -14,17 +14,17 @@ export default function ArmoryBackground(props: {
   }
   return (
     <div
-      className="text-white w-[1300px] flex overflow-hidden p-2 justify-center h-[800px] bg-no-repeat relative bg-[length:118%] bg-[position:48%_75%]"
+      className="text-white w-[1300px] flex overflow-hidden justify-center h-[790px] bg-no-repeat relative bg-[length:118%] bg-[position:48%_75%]"
       style={{
         backgroundImage: `url(${bg})`,
       }}
     >
       <div className="pointer-events-none absolute inset-0 z-[5]">
-        {/* LEFT fade (icons start here) #2a180d #1a0f08*/}
+        {/* LEFT fade (icons start here) #2a180d #1a0f08 #2a180d,*/}
         <div
           className="absolute left-0 top-0 h-full w-[250px]"
           style={{
-            background: "linear-gradient(to right, #2a180d, rgba(0,0,0,0.01))",
+            background: "linear-gradient(to right, #1f1105, rgba(0,0,0,0.01))",
           }}
         />
 
@@ -32,15 +32,15 @@ export default function ArmoryBackground(props: {
         <div
           className="absolute right-0 top-0 h-full w-[250px]"
           style={{
-            background: "linear-gradient(to left, #2a180d, rgba(0,0,0,0.01))",
+            background: "linear-gradient(to left, #1f1105, rgba(0,0,0,0.01))",
           }}
         />
 
         {/* TOP fade */}
         <div
-          className="absolute top-0 left-0 w-full h-[120px]"
+          className="absolute top-0 left-0 w-full h-[250px]"
           style={{
-            background: "linear-gradient(to bottom, #2a180d, rgba(0,0,0,0.01))",
+            background: "linear-gradient(to bottom, #1f1105, rgba(0,0,0,0.01))",
           }}
         />
 
@@ -48,14 +48,14 @@ export default function ArmoryBackground(props: {
         <div
           className="absolute bottom-0 left-0 w-full h-[120px]"
           style={{
-            background: "linear-gradient(to top, #2a180d, rgba(0,0,0,0.01))",
+            background: "linear-gradient(to top, #1f1105, rgba(0,0,0,0.01))",
           }}
         />
       </div>
 
       <div className="absolute inset-0 backdrop-blur-[0.5px]"></div>
       <CharacterImage raceId={props.raceId} />
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-35" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-15" />
       <div className="relative z-10 w-full h-full flex flex-col items-center">
         {props.children}
       </div>

@@ -30,6 +30,14 @@ import {
 } from "~/components/constants";
 import { useChatContext } from "~/components/chat";
 import { useEffect } from "react";
+import { ArmoryFaction } from "~/components/race";
+import { Professions, SecondarySkills } from "~/components/skills";
+import {
+  GeneralStats,
+  StatRow,
+  StatSection,
+  sanitizeStat,
+} from "~/components/stats";
 
 type SlotData = Route.ComponentProps["loaderData"]["equippedItems"][number];
 type SetSpell = {
@@ -457,7 +465,7 @@ function ArmorSlot(props: {
                 null}
             </div>
             <div>
-              {props.slot.RequiredLevel
+              {props.slot.RequiredLevel && props.slot.RequiredLevel > 1
                 ? `Requires Level ${props.slot.RequiredLevel} `
                 : null}
             </div>
@@ -489,13 +497,21 @@ function ArmorSlot(props: {
 }
 
 export default function Armory(props: Route.ComponentProps) {
-  let { equippedItems, charInfo, charStats, itemSetData } =
-    props.loaderData as {
-      equippedItems: EquippedItem[];
-      charInfo: any;
-      charStats: any;
-      itemSetData: Record<string, ItemSetInfo>;
-    };
+  let {
+    equippedItems,
+    charInfo,
+    charStats,
+    itemSetData,
+    average_item_level,
+    char_skills,
+  } = props.loaderData as {
+    equippedItems: EquippedItem[];
+    charInfo: any;
+    charStats: any;
+    itemSetData: Record<string, ItemSetInfo>;
+    average_item_level: any;
+    char_skills: any[];
+  };
 
   const { setCharacterName } = useChatContext();
 
@@ -517,19 +533,51 @@ export default function Armory(props: Route.ComponentProps) {
   }
 
   return (
-    <div className="max-w-[1300px] mx-auto gap-0.5 mt-5 h-[1400px] bg-content-dark-50 border-t rounded-2xl overflow-hidden">
+    <div className="max-w-[1300px] mx-auto gap-0.5 mt-5 h-[1600px] bg-content-dark-50 border-t rounded-2xl overflow-hidden">
       <ArmoryBackground raceId={charInfo.race}>
-        <div className="w-full max-w-4xl pt-10">
-          <div className="">
-            <div className="text-3xl font-bold">{charName}</div>
-            <div className="pb-3 font-bold text-lg">
-              <NameColor class={charInfo.class_name}>
-                <span className="font-extrabold">{charInfo.level}</span>{" "}
-                <span>{charInfo.race_name}</span>{" "}
-                <span>{charInfo.spec_name}</span>{" "}
-                <span>{charInfo.class_name}</span>
-              </NameColor>{" "}
-              <span className="text-wow-gold">{charInfo.guild_name}</span>
+        <div className="w-full pt-7 pl-10 pr-10">
+          <div className="pb-4 border-b border-b-article-border">
+            <ul className="flex gap-4 text-wow-stagger pl-10 pr-10">
+              <li>CHARACTER</li>
+              <li>TALENTS & GLYPHS</li>
+              <li>PLAYER VS PLAYER</li>
+              <li>DUNGEONS & RAIDS</li>
+              <li>ACHIEVEMENTS</li>
+              <li>MOUNTS & COLLECTIONS</li>
+            </ul>
+          </div>
+        </div>
+        <div className="w-full max-w-[62.5rem] pt-2">
+          {" "}
+          {/*max-w-[60.625rem]*/}
+          <div className="pt-2 pb-2">
+            <div className="relative w-full">
+              <div className="absolute -ml-24 -mt-1">
+                <ArmoryFaction raceId={charInfo.race} />
+              </div>
+              <div className="flex justify-between items-baseline">
+                <div className="text-3xl font-bold">{charName}</div>
+                <div className="whitespace-nowrap mt-[-2]">
+                  <span className="text-2xl font-extrabold">
+                    {average_item_level} ilvl
+                  </span>
+                  <span className="text-m"></span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="pb-2 font-bold text-lg">
+                  <NameColor class={charInfo.class_name}>
+                    <span className="font-extrabold">{charInfo.level}</span>{" "}
+                    <span>{charInfo.race_name}</span>{" "}
+                    <span>{charInfo.spec_name}</span>{" "}
+                    <span>{charInfo.class_name}</span>
+                  </NameColor>{" "}
+                  <span className="text-wow-gold">{charInfo.guild_name}</span>
+                </div>
+                <div className="text-sm text-gray-400 whitespace-nowrap mb-2">
+                  (Average Item Level)
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex justify-between">
@@ -634,7 +682,7 @@ export default function Armory(props: Route.ComponentProps) {
               ></ArmorSlot>
             </div>
           </div>
-          <div className="flex gap-0.5 justify-center pt-10">
+          <div className="flex gap-0.5 justify-center pt-12">
             <ArmorSlot
               slot={equippedItemsObject[15]}
               slotNumber={15}
@@ -657,78 +705,248 @@ export default function Armory(props: Route.ComponentProps) {
           </div>
         </div>
       </ArmoryBackground>
-      <div className="h-12 gap-1 border-t-black border-t-2">
-        <div className="border-2 bg-content-hover">
-          <div className="p-5 flex flex-row justify-center">
-            <span className="mr-4 bg-[#49c219] flex rounded-md w-50 h-8 items-center text-white text-center font-bold justify-center">
-              Health: {charStats.health}
-            </span>
-            {charInfo.class === 1 && (
-              <span className="bg-[#C41E3A] flex rounded-md w-50 h-8 items-center text-white text-center font-bold justify-center">
-                Rage: {charStats.power2}
-              </span>
-            )}
-            {[2, 3, 5, 7, 8, 9, 11].includes(charInfo.class) && (
-              <span className="bg-[#0070DE] flex rounded-md w-50 h-8 items-center text-white text-center font-bold justify-center">
-                Mana: {charStats.power1}
-              </span>
-            )}
-            {charInfo.class === 4 && (
-              <span className="bg-[#FFF569] flex rounded-md w-50 h-8 items-center text-black text-center font-bold justify-center">
-                Energy: {charStats.power3}
-              </span>
-            )}
-            {charInfo.class === 6 && (
-              <span className="bg-[#00CCFF] flex rounded-md w-50 h-8 items-center text-white text-center font-bold justify-center">
-                Runic Power: {charStats.power6}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="text-amber-100">
-              <div className="font-extrabold">Base Stats</div>
-              <div>
-                Strength{" "}
-                <span
-                  className={charStats.strength > 1200 ? "text-[#1eff00]" : ""}
-                >
-                  {charStats.strength}
-                </span>
+      <div className="px-10 text-sm text-amber-100">
+        <div className="w-full border-t border-t-article-border pt-[1.625rem] text-[0.781rem]">
+          <div className="flex gap-6 w-fit mx-auto">
+            {/* LEFT: Single big Character Stats box with 2 inner columns */}
+            <div className="bg-armory-stat-section rounded-md p-6 flex flex-col gap-6">
+              <div className="font-bold text-white text-armory-section-title">
+                Character Stats
               </div>
-              <div>
-                Agility{" "}
-                <span
-                  className={charStats.agility > 1200 ? "text-[#1eff00]" : ""}
-                >
-                  {charStats.agility}
-                </span>
+
+              <div className="flex gap-8 flex-1">
+                {/* Inner left: Attributes, Melee, Resistances */}
+                <div className="flex flex-col gap-6 flex-1">
+                  {/* Row 1: Attributes | Ranged */}
+                  <div className="flex gap-8">
+                    <div className="flex-1">
+                      <StatSection title="Attributes">
+                        <StatRow
+                          label="Strength"
+                          value={charStats.strength}
+                          highlight={charStats.strength > 1200}
+                        />
+                        <StatRow
+                          label="Agility"
+                          value={charStats.agility}
+                          highlight={charStats.agility > 1200}
+                        />
+                        <StatRow
+                          label="Stamina"
+                          value={charStats.stamina}
+                          highlight={charStats.stamina > 1200}
+                        />
+                        <StatRow
+                          label="Intellect"
+                          value={charStats.intellect}
+                          highlight={charStats.intellect > 1200}
+                        />
+                        <StatRow
+                          label="Spirit"
+                          value={charStats.spirit}
+                          highlight={charStats.spirit > 1200}
+                        />
+                        <StatRow label="Armor" value={charStats.armor} />
+                      </StatSection>
+                    </div>
+                    <div className="flex-1">
+                      <StatSection title="Ranged">
+                        <StatRow
+                          label="Damage"
+                          value={`${charStats.ranged_dmg_min ?? 0} – ${
+                            charStats.ranged_dmg_max ?? 0
+                          }`}
+                        />
+                        <StatRow
+                          label="Attack Power"
+                          value={sanitizeStat(
+                            charStats.ranged_attack_power ?? 0,
+                          )}
+                        />
+                        <StatRow
+                          label="Speed"
+                          value={(charStats.ranged_speed ?? 0).toFixed(2)}
+                        />
+                        <StatRow
+                          label="Haste"
+                          value={(charStats.ranged_haste ?? 0).toFixed(2)}
+                          suffix="%"
+                        />
+                        <StatRow
+                          label="Hit"
+                          value={(charStats.ranged_hit ?? 0).toFixed(2)}
+                          suffix="%"
+                        />
+                        <StatRow
+                          label="Critical Strike"
+                          value={(charStats.ranged_crit_pct ?? 0).toFixed(2)}
+                          suffix="%"
+                        />
+                        <StatRow
+                          label="Armor Penetration"
+                          value={(charStats.ranged_arp ?? 0).toFixed(2)}
+                        />
+                      </StatSection>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Melee | Spell */}
+                  <div className="flex gap-8">
+                    <div className="flex-1">
+                      <StatSection title="Melee">
+                        <StatRow
+                          label="Damage"
+                          value={`${charStats.melee_dmg_min ?? 0} – ${
+                            charStats.melee_dmg_max ?? 0
+                          }`}
+                        />
+                        <StatRow
+                          label="Attack Power"
+                          value={charStats.attack_power ?? 0}
+                        />
+                        <StatRow
+                          label="Speed"
+                          value={(charStats.melee_speed ?? 0).toFixed(2)}
+                        />
+                        <StatRow
+                          label="Haste"
+                          value={(charStats.haste ?? 0).toFixed(2)}
+                          suffix="%"
+                        />
+                        <StatRow
+                          label="Hit"
+                          value={(charStats.hit ?? 0).toFixed(2)}
+                          suffix="%"
+                        />
+                        <StatRow
+                          label="Critical Strike"
+                          value={(charStats.crit_pct ?? 0).toFixed(2)}
+                          suffix="%"
+                        />
+                        <StatRow
+                          label="Armor Penetration"
+                          value={(charStats.arp ?? 0).toFixed(2)}
+                          suffix="%"
+                        />
+                        <StatRow
+                          label="Expertise"
+                          value={charStats.expertise ?? 0}
+                        />
+                      </StatSection>
+                    </div>
+                    <div className="flex-1">
+                      <StatSection title="Spell">
+                        <StatRow
+                          label="Spell Power"
+                          value={charStats.spell_power ?? 0}
+                        />
+                        <StatRow
+                          label="Haste"
+                          value={(charStats.spell_haste ?? 0).toFixed(2)}
+                          suffix="%"
+                        />
+                        <StatRow
+                          label="Hit"
+                          value={(charStats.spell_hit ?? 0).toFixed(2)}
+                          suffix="%"
+                        />
+                        <StatRow
+                          label="Spell Penetration"
+                          value={(charStats.spell_pen ?? 0).toFixed(2)}
+                        />
+                        <StatRow
+                          label="Mana Regen"
+                          value={(charStats.mana_regen ?? 0).toFixed(2)}
+                        />
+                        <StatRow
+                          label="Combat Regen"
+                          value={(charStats.combat_regen ?? 0).toFixed(2)}
+                        />
+                        <StatRow
+                          label="Critical Strike"
+                          value={(charStats.spell_crit_pct ?? 0).toFixed(2)}
+                          suffix="%"
+                        />
+                      </StatSection>
+                    </div>
+                  </div>
+
+                  {/* Row 3: Resistances | Defense */}
+                  <div className="flex gap-8">
+                    <div className="flex-1">
+                      <StatSection title="Resistances">
+                        <StatRow
+                          label="Arcane"
+                          value={charStats.res_arcane ?? 0}
+                        />
+                        <StatRow label="Fire" value={charStats.res_fire ?? 0} />
+                        <StatRow
+                          label="Frost"
+                          value={charStats.res_frost ?? 0}
+                        />
+                        <StatRow
+                          label="Nature"
+                          value={charStats.res_nature ?? 0}
+                        />
+                        <StatRow
+                          label="Shadow"
+                          value={charStats.res_shadow ?? 0}
+                        />
+                      </StatSection>
+                    </div>
+                    <div className="flex-1">
+                      <StatSection title="Defense">
+                        <StatRow
+                          label="Defense"
+                          value={charStats.defense ?? 0}
+                        />
+                        <StatRow
+                          label="Dodge"
+                          value={(charStats.dodge ?? 0).toFixed(2)}
+                          suffix="%"
+                        />
+                        <StatRow
+                          label="Parry"
+                          value={(charStats.parry ?? 0).toFixed(2)}
+                          suffix="%"
+                        />
+                        <StatRow
+                          label="Block"
+                          value={(charStats.block ?? 0).toFixed(2)}
+                          suffix="%"
+                        />
+                        <StatRow
+                          label="Resilience"
+                          value={charStats.resilience ?? 0}
+                        />
+                      </StatSection>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div>
-                Stamina{" "}
-                <span
-                  className={charStats.stamina > 1200 ? "text-[#1eff00]" : ""}
-                >
-                  {charStats.stamina}
-                </span>
+            </div>
+
+            {/* RIGHT: General, Professions, Secondary Skills — separate boxes */}
+            <div className="flex flex-col gap-6 w-[350px]">
+              <div className="bg-armory-stat-section rounded-md p-6 flex flex-col gap-[9px]">
+                <div className="font-bold text-white pb-4 text-armory-section-title">
+                  General
+                </div>
+                <GeneralStats charInfo={charInfo} charStats={charStats} />
               </div>
-              <div>
-                Intellect{" "}
-                <span
-                  className={charStats.intellect > 1200 ? "text-[#1eff00]" : ""}
-                >
-                  {charStats.intellect}
-                </span>
+
+              <div className="bg-armory-stat-section rounded-md p-6 flex flex-col gap-[9px]">
+                <div className="font-bold text-white pb-4 text-armory-section-title">
+                  Professions
+                </div>
+                <Professions skills={char_skills} />
               </div>
-              {/*<div>
-                Spirit{" "}
-                <span
-                  className={charStats.spirit > 1200 ? "text-[#1eff00]" : ""}
-                >
-                  {charStats.spirit}
-                </span>
-              </div>*/}
-              <div>
-                Armor <span>{charStats.armor}</span>
+
+              <div className="bg-armory-stat-section rounded-md p-6 flex flex-col gap-[9px] flex-1">
+                <div className="font-bold text-white pb-4 text-armory-section-title">
+                  Secondary Skills
+                </div>
+                <SecondarySkills skills={char_skills} />
               </div>
             </div>
           </div>
