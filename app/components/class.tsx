@@ -76,7 +76,7 @@ export function NameColor(props: { class: string; children: ReactNode }) {
     case "Priest":
       classColor = "text-class-priest";
       break;
-    case "DeathKnight":
+    case "Death Knight":
       classColor = "text-class-deathknight";
       break;
     case "Shaman":
