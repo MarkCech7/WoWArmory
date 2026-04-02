@@ -21,6 +21,8 @@ import draeneiMale from "~/assets/race/draenei-male.webp";
 import draeneiFemale from "~/assets/race/draenei-female.webp";
 import alliance from "~/assets/faction/alliance.svg";
 import horde from "~/assets/faction/horde.svg";
+import allianceArmory from "~/assets/faction/armoryalliance.png";
+import hordeArmory from "~/assets/faction/armoryhorde.png";
 
 export function CharRace(props: { raceId: number; gender: number }) {
   let src = "";
@@ -126,6 +128,25 @@ export function Faction(props: { raceId: number }) {
     alt = "Horde";
   }
   return <img className="w-7 h-7" src={src} alt={alt} />;
+}
+
+export function ArmoryFaction(props: { raceId: number }) {
+  let src = "";
+  let alt = "";
+  if (
+    props.raceId === 1 ||
+    props.raceId === 3 ||
+    props.raceId === 4 ||
+    props.raceId === 7 ||
+    props.raceId === 11
+  ) {
+    src = allianceArmory;
+    alt = "Alliance";
+  } else {
+    src = hordeArmory;
+    alt = "Horde";
+  }
+  return <img className="w-16 h-18" src={src} alt={alt} />;
 }
 
 /* faction
