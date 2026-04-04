@@ -1,9 +1,201 @@
+import re
 from fastapi import APIRouter, HTTPException
 from db import get_characters_connection
 from rag import index_character
 from utils import get_class_name, get_slot_name, get_race_name, compute_average_item_level
 
 router = APIRouter()
+
+# Matches tokens like:
+#   $71905s1   $71904a1   $73422d   $71905u   $/1000;s1   $s2
+# Groups: (divisor|None, spell_id|"", token_type, effect_index|"")
+# Matches arithmetic expression tokens like ${8-1}, ${10+2}, ${4*3}
+_TOKEN_RE = re.compile(r'\$(?:\/(\d+);)?(\d*)([suadm])(\d*)')
+
+
+def _extract_spell_ids(descriptions: list[str]) -> set[int]:
+    ids = set()
+
+    for desc in descriptions:
+        if not desc:
+            continue
+
+        for m in _TOKEN_RE.finditer(desc):
+            spell_id_str = m.group(2)
+
+            if spell_id_str:
+                ids.add(int(spell_id_str))
+    
+    return ids
+
+
+def _fetch_spell_data(cursor, spell_ids: set[int]) -> dict:
+    if not spell_ids:
+        return {}
+
+    ids_sql = ",".join(str(i) for i in spell_ids)
+    data: dict[int, dict] = {
+        sid: {"effects": {}, "cumulative_aura": 0, "duration_ms": 0}
+        for sid in spell_ids
+    }
+
+    # SpellEffect: base points, die sides, radius
+    # EffectIndex is 0-based in DB2; tokens are 1-based
+    cursor.execute(f"""
+        SELECT
+            se.SpellID,
+            se.EffectIndex,
+            se.EffectBasePoints,
+            se.EffectDieSides,
+            COALESCE(sr.Radius, 0) AS Radius
+        FROM web.spell_effect AS se
+        LEFT JOIN web.spell_radius AS sr ON sr.ID = se.EffectRadiusIndex1
+        WHERE se.SpellID IN ({ids_sql})
+        ORDER BY se.SpellID, se.EffectIndex
+    """)
+    for row in cursor.fetchall():
+        data[row["SpellID"]]["effects"][row["EffectIndex"] + 1] = {
+            "base_points": row["EffectBasePoints"],
+            "die_sides":   row["EffectDieSides"],
+            "radius":      row["Radius"],
+        }
+
+    # SpellAuraOptions: stack count ($u token)
+    cursor.execute(f"""
+        SELECT SpellID, CumulativeAura
+        FROM web.spell_aura_options
+        WHERE SpellID IN ({ids_sql})
+    """)
+    for row in cursor.fetchall():
+        data[row["SpellID"]]["cumulative_aura"] = row["CumulativeAura"]
+
+    # SpellMisc + SpellDuration: duration ($d token)
+    cursor.execute(f"""
+        SELECT sm.SpellID, sd.Duration AS duration_ms
+        FROM web.spell_misc AS sm
+        LEFT JOIN web.spell_duration AS sd ON sd.ID = sm.DurationIndex
+        WHERE sm.SpellID IN ({ids_sql})
+    """)
+    for row in cursor.fetchall():
+        data[row["SpellID"]]["duration_ms"] = row["duration_ms"] or 0
+
+    return data
+
+
+def _format_duration(ms: int) -> str:
+    seconds = abs(ms) // 1000
+
+    if seconds == 0:
+        return "0 sec"
+    
+    if seconds % 60 == 0:
+        return f"{seconds // 60} min"
+
+    return f"{seconds} sec"
+
+
+def _resolve_token(
+    divisor: int,
+    spell_id: int | None,
+    token_type: str,
+    effect_idx: int,
+    spell_data: dict,
+    current_spell_id: int | None,
+) -> str:
+    sid = spell_id if spell_id is not None else current_spell_id
+
+    if sid is None or sid not in spell_data:
+        return "?"
+
+    entry = spell_data[sid]
+
+    if token_type == "s":
+        effect = entry["effects"].get(effect_idx)
+
+        if effect is None:
+            return "?"
+        
+        base = effect["base_points"]
+        die  = effect["die_sides"]
+
+        if die > 1:
+            # Range display: (base+1) to (base+die)
+            lo = abs(base + 1) // divisor
+            hi = abs(base + die) // divisor
+            return f"{lo} to {hi}"
+        else:
+            # die == 0 or 1: displayed value = base + die
+            # abs() because DB stores reductions as negatives; tooltip text carries the meaning
+            return str(abs(base + die) // divisor)
+
+    elif token_type == "m":
+        # Minimum value — EffectBasePoints without die
+        effect = entry["effects"].get(effect_idx)
+
+        if effect is None:
+            return "?"
+
+        return str(abs(effect["base_points"]) // divisor)
+
+    elif token_type == "u":
+        return str(entry["cumulative_aura"] // divisor)
+
+    elif token_type == "a":
+        effect = entry["effects"].get(effect_idx)
+
+        if effect is None:
+            return "?"
+        
+        return str(int(effect["radius"]) // divisor)
+
+    elif token_type == "d":
+        return _format_duration(entry["duration_ms"] // divisor if divisor > 1 else entry["duration_ms"])
+
+    return "?"
+
+
+def resolve_spell_descriptions(items: list[dict], cursor) -> None:
+    descriptions = [item.get("Description") or item.get("description") or "" for item in items]
+    spell_ids = _extract_spell_ids(descriptions)
+
+    # Also pre-load each item's own spell so bare tokens always resolve
+    for item in items:
+        sid = item.get("spellId")
+
+        if sid:
+            spell_ids.add(int(sid))
+
+    if not spell_ids:
+        return
+
+    spell_data = _fetch_spell_data(cursor, spell_ids)
+
+    for item in items:
+        raw = item.get("Description") or item.get("description")
+        if not raw:
+            continue
+
+        current_spell_id: int | None = item.get("spellId")
+
+        def replace_token(m: re.Match) -> str:
+            divisor_str, spell_id_str, token_type, idx_str = m.groups()
+
+            return _resolve_token(
+                divisor          = int(divisor_str) if divisor_str else 1,
+                spell_id         = int(spell_id_str) if spell_id_str else None,
+                token_type       = token_type,
+                effect_idx       = int(idx_str) if idx_str else 1,
+                spell_data       = spell_data,
+                current_spell_id = current_spell_id,
+            )
+
+        resolved = _TOKEN_RE.sub(replace_token, raw)
+        resolved = re.sub(r'\$\{([\d\s+\-*/]+)\}', lambda m: str(int(eval(m.group(1)))), resolved)
+
+        if "Description" in item:
+            item["Description"] = resolved
+        else:
+            item["description"] = resolved
 
 def load_character(name: str) -> dict:
 
@@ -58,7 +250,7 @@ def load_character(name: str) -> dict:
                 COALESCE(transmogsource_hf.ItemID, transmogsource.ItemID) as transmog_item_id,
                 COALESCE(transmog_itemdb_hf.Display, transmog_itemdb.Display) as transmog_item_name,
                 (
-                    SELECT GROUP_CONCAT(sp.Description SEPARATOR '||')
+                    SELECT GROUP_CONCAT(CONCAT(sp.ID, '::', sp.Description) SEPARATOR '||')
                     FROM web.item_effect AS eff
                     LEFT JOIN web.spell AS sp ON sp.ID = eff.SpellID
                     WHERE eff.ParentItemID = item.itemEntry
@@ -118,6 +310,18 @@ def load_character(name: str) -> dict:
                 new_item = ({**item, "enchantments": enchantments})
                 new_item["slot_name"] = get_slot_name(item["InventoryType"])
                 equipped_items.append(new_item)
+
+            for item in equipped_items:
+                raw = item.get("Description") or ""
+                parsed_spells = []
+                for part in raw.split("||"):
+                    if "::" not in part:
+                        continue
+                    spell_id_str, desc = part.split("::", 1)
+                    parsed_spells.append({"spellId": int(spell_id_str), "Description": desc})
+ 
+                resolve_spell_descriptions(parsed_spells, cursor)
+                item["Description"] = "||".join(sp["Description"] for sp in parsed_spells)
 
             # char info
             cursor.execute(f"""
@@ -278,20 +482,18 @@ def load_character(name: str) -> dict:
                         if item.get("ItemSet") == s["ID"]
                     ]
                     equipped_count = len(equipped_set_items)
-
                     # map InventoryType to equipped item
                     equipped_by_inv_type = {item["InventoryType"]: item for item in equipped_set_items}
 
                     pieces = [
                         {
                             "itemId": fid,
-                            "name": equipped_by_inv_type.get(set_item_inv_types.get(fid), {}).get("item_name") 
+                            "name": equipped_by_inv_type.get(set_item_inv_types.get(fid), {}).get("item_name")
                                     or set_item_names_by_id.get(fid, f"Item {fid}"),
                             "equipped": set_item_inv_types.get(fid) in equipped_by_inv_type,
                         }
                         for fid in fallback_ids
                     ]
-                    
                     item_set_data[s["ID"]] = {
                         "id": s["ID"],
                         "name": s["Name"],
@@ -308,6 +510,9 @@ def load_character(name: str) -> dict:
                         ],
                     }
 
+            for set_data in item_set_data.values():
+                resolve_spell_descriptions(set_data["spells"], cursor)
+
     finally:
         conn.close()
 
@@ -320,6 +525,7 @@ def load_character(name: str) -> dict:
         "char_skills": char_skills
     }
 
+
 @router.get("/armory/{name}")
 def get_armory(name: str):
     data = load_character(name)
@@ -327,5 +533,10 @@ def get_armory(name: str):
     if not data:
         raise HTTPException(status_code=404, detail="Character not found")
     index_character(data)
-    
+
     return data
+
+if __name__ == "__main__":
+    import json
+    data = load_character("Provimsen")
+    print(json.dumps(data, indent=2, default=str))
