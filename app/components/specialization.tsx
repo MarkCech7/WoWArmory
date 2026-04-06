@@ -28,6 +28,7 @@ import destruction from "~/assets/spec/warlock-destruction.webp";
 import arms from "~/assets/spec/warrior-arms.webp";
 import fury from "~/assets/spec/warrior-fury.webp";
 import protectionwar from "~/assets/spec/warrior-protection.webp";
+import defaulticon from "~/assets/icons/INV_Misc_QuestionMark.png";
 
 export function Spec(props: { specId: number }) {
   let src = "";
@@ -154,8 +155,8 @@ export function Spec(props: { specId: number }) {
       alt = "Protection";
       break;
     default:
-      src = "";
-      alt = "";
+      src = defaulticon;
+      alt = "Unknown Spec";
   }
   return <img className="w-7 h-7" src={src} alt={alt} />;
 }
