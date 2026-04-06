@@ -18,8 +18,8 @@ def load_arena_ladder(bracket: int, limit: int, offset: int):
                         c.race,
                         c.class,
                         c.gender,
-                        cas.seasonWon AS seasonWins,
-                        cas.seasonGames,
+                        cas.seasonWon AS season_wins,
+                        cas.seasonGames AS season_games,
                         DENSE_RANK() OVER (PARTITION BY cas.slot ORDER BY cas.personalRating DESC) AS rank
                     FROM character_arena_stats AS cas
                     INNER JOIN characters AS c ON cas.guid = c.guid
@@ -52,8 +52,8 @@ def load_arena_ladder(bracket: int, limit: int, offset: int):
                         rp.race,
                         rp.class,
                         rp.gender,
-                        rp.seasonWins,
-                        rp.seasonGames,
+                        rp.season_wins,
+                        rp.season_games,
                         (
                             SELECT tt.Name
                             FROM character_talent ct
@@ -64,7 +64,7 @@ def load_arena_ladder(bracket: int, limit: int, offset: int):
                             GROUP BY tt.ID, tt.Name
                             ORDER BY SUM(ct.Rank + 1) DESC
                             LIMIT 1
-                        ) AS specName,
+                        ) AS spec_name,
                         (
                             SELECT tt.ID
                             FROM character_talent ct
@@ -96,10 +96,10 @@ def load_arena_ladder(bracket: int, limit: int, offset: int):
                     race,
                     class,
                     gender,
-                    seasonWins,
-                    seasonGames,
+                    season_wins,
+                    season_games,
                     spec,
-                    specName,
+                    spec_name,
                     title,
                     (SELECT COUNT(*) FROM FinalData) AS total_count
                 FROM FinalData
@@ -108,8 +108,8 @@ def load_arena_ladder(bracket: int, limit: int, offset: int):
             """, (bracket, limit, offset))
             char_info = cursor.fetchall()
             for row in char_info:
-                row["className"] = get_class_name(row["class"])
-                row["specName"] = row["specName"] or ""
+                row["class_name"] = get_class_name(row["class"])
+                row["spec_name"] = row["spec_name"] or ""
                 row["spec"] = row["spec"] or ""     
 
             return char_info

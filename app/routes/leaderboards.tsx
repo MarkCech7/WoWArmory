@@ -15,10 +15,10 @@ type ArenaPlayer = {
   rank: number;
   race: number;
   class: number;
-  className: string;
+  class_name: string;
   gender: number;
-  seasonWins: number;
-  seasonGames: number;
+  season_wins: number;
+  season_games: number;
   spec: number | null;
   title: string;
   total_count: number;
@@ -138,12 +138,12 @@ export default function Leaderboard(props: Route.ComponentProps) {
                   <TableCell>
                     <div className="flex justify-center">
                       <CharRace raceId={player.race} gender={player.gender} />
-                      <Class class={player.className} />
+                      <Class class={player.class_name} />
                       <Spec specId={Number(player.spec)} />
                     </div>
                   </TableCell>
                   <TableCell>
-                    <NameColor class={player.className}>
+                    <NameColor class={player.class_name}>
                       <div className="pl-4">{player.name}</div>
                     </NameColor>
                   </TableCell>
@@ -161,12 +161,12 @@ export default function Leaderboard(props: Route.ComponentProps) {
                   </TableCell>
                   <TableCell>
                     <div className="text-wins text-center">
-                      {player.seasonWins}
+                      {player.season_wins}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-losses text-center">
-                      {player.seasonGames - player.seasonWins}
+                      {player.season_games - player.season_wins}
                     </div>
                   </TableCell>
                 </tr>
