@@ -7,7 +7,7 @@ import dwarfMale from "~/assets/race/dwarf-male.webp";
 import dwarfFemale from "~/assets/race/dwarf-female.webp";
 import nelfMale from "~/assets/race/night-elf-male.webp";
 import nelfFemale from "~/assets/race/night-elf-female.webp";
-import undeadMale from "~/assets/race/night-elf-male.webp";
+import undeadMale from "~/assets/race/undead-male.webp";
 import undeadFemale from "~/assets/race/undead-female.webp";
 import taurenMale from "~/assets/race/tauren-male.webp";
 import taurenFemale from "~/assets/race/tauren-female.webp";
