@@ -144,7 +144,16 @@ export default function Leaderboard(props: Route.ComponentProps) {
                   </TableCell>
                   <TableCell>
                     <NameColor class={player.class_name}>
-                      <div className="pl-4">{player.name}</div>
+                      <div className="pl-4">
+                        <a
+                          href={`/armory/${player.name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-white"
+                        >
+                          {player.name}
+                        </a>
+                      </div>
                     </NameColor>
                   </TableCell>
                   <TableCell>
