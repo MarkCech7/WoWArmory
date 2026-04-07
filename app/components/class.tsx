@@ -34,7 +34,7 @@ export function Class(props: { class: string }) {
       src = priest;
       alt = "Priest";
       break;
-    case "DeathKnight":
+    case "Death Knight":
       src = dk;
       alt = "Death Knight";
       break;
