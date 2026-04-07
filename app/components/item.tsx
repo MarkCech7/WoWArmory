@@ -184,7 +184,12 @@ export function getAllowedClasses(
   classValue: number,
   classDefinition: Record<string, number>,
 ): string | null {
-  if (classValue === -1 || classValue === 262143) {
+  if (
+    classValue === -1 ||
+    classValue === 262143 ||
+    classValue === 1535 ||
+    classValue === 32767
+  ) {
     return null;
   }
 
