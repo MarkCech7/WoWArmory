@@ -57,9 +57,9 @@ def index_web_articles():
         print("No documents to index.")
 
 def index_character(data: dict):
-    info = data["charInfo"]
-    stats = data["charStats"]
-    items = data["equippedItems"]
+    info = data["char_info"]
+    stats = data["char_stats"]
+    items = data["equipped_items"]
     average_item_level = data["average_item_level"]
     selected_title = info.get("actual_title")
     name = info['name']
@@ -73,7 +73,7 @@ def index_character(data: dict):
 
     {name}'s equipped items:
     """ + "\n".join(
-            f"  {name}'s {i['slot_name']}: {i['item_name']} (item level {i['ItemLevel']})"
+            f"  {name}'s {i['slot_name']}: {i['item_name']} (item level {i['item_level']})"
             for i in items
         )
 

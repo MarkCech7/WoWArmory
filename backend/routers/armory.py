@@ -160,7 +160,7 @@ def resolve_spell_descriptions(items: list[dict], cursor) -> None:
 
     # Also pre-load each item's own spell so bare tokens always resolve
     for item in items:
-        sid = item.get("spellId")
+        sid = item.get("spell_id")
 
         if sid:
             spell_ids.add(int(sid))
@@ -175,7 +175,7 @@ def resolve_spell_descriptions(items: list[dict], cursor) -> None:
         if not raw:
             continue
 
-        current_spell_id: int | None = item.get("spellId")
+        current_spell_id: int | None = item.get("spell_id")
 
         def replace_token(m: re.Match) -> str:
             divisor_str, spell_id_str, token_type, idx_str = m.groups()
@@ -207,45 +207,45 @@ def load_character(name: str) -> dict:
             cursor.execute("""
                 SELECT
                 item.guid as item_guid,
-                item.itemEntry,
+                item.itemEntry as item_entry,
                 item.owner_guid as owner,
                 item.enchantments,
                 inv.slot,
                 char.guid as char_guid,
                 COALESCE(itemdb_hf.Display, itemdb.Display) as item_name,
-                COALESCE(itemdb_hf.OverallQualityID, itemdb.OverallQualityID) as OverallQualityID,
-                COALESCE(itemdb_hf.Flags1, itemdb.Flags1) as Flags1,
-                COALESCE(itemdb_hf.ItemLevel, itemdb.ItemLevel) as ItemLevel,
-                COALESCE(itemdb_hf.InventoryType, itemdb.InventoryType) as InventoryType,
-                COALESCE(itemdb_hf.Resistances1, itemdb.Resistances1) as Resistances1,
-                COALESCE(itemdb_hf.MinDamage1, itemdb.MinDamage1) as MinDamage1,
-                COALESCE(itemdb_hf.MaxDamage1, itemdb.MaxDamage1) as MaxDamage1,
-                COALESCE(itemdb_hf.ItemDelay, itemdb.ItemDelay) as ItemDelay,
-                COALESCE(itemdb_hf.StatModifierBonusStat1, itemdb.StatModifierBonusStat1) as StatModifierBonusStat1,
-                COALESCE(itemdb_hf.StatModifierBonusStat2, itemdb.StatModifierBonusStat2) as StatModifierBonusStat2,
-                COALESCE(itemdb_hf.StatModifierBonusStat3, itemdb.StatModifierBonusStat3) as StatModifierBonusStat3,
-                COALESCE(itemdb_hf.StatModifierBonusStat4, itemdb.StatModifierBonusStat4) as StatModifierBonusStat4,
-                COALESCE(itemdb_hf.StatModifierBonusStat5, itemdb.StatModifierBonusStat5) as StatModifierBonusStat5,
-                COALESCE(itemdb_hf.StatModifierBonusStat6, itemdb.StatModifierBonusStat6) as StatModifierBonusStat6,
-                COALESCE(itemdb_hf.StatModifierBonusAmount1, itemdb.StatModifierBonusAmount1) as StatModifierBonusAmount1,
-                COALESCE(itemdb_hf.StatModifierBonusAmount2, itemdb.StatModifierBonusAmount2) as StatModifierBonusAmount2,
-                COALESCE(itemdb_hf.StatModifierBonusAmount3, itemdb.StatModifierBonusAmount3) as StatModifierBonusAmount3,
-                COALESCE(itemdb_hf.StatModifierBonusAmount4, itemdb.StatModifierBonusAmount4) as StatModifierBonusAmount4,
-                COALESCE(itemdb_hf.StatModifierBonusAmount5, itemdb.StatModifierBonusAmount5) as StatModifierBonusAmount5,
-                COALESCE(itemdb_hf.StatModifierBonusAmount6, itemdb.StatModifierBonusAmount6) as StatModifierBonusAmount6,
-                COALESCE(itemdb_hf.MaxDurability, itemdb.MaxDurability) as MaxDurability,
-                COALESCE(itemdb_hf.RequiredLevel, itemdb.RequiredLevel) as RequiredLevel,
-                COALESCE(itemdb_hf.SocketMatchEnchantmentID, itemdb.SocketMatchEnchantmentID) as SocketMatchEnchantmentID,
-                COALESCE(itemdb_hf.AllowableClass, itemdb.AllowableClass) as AllowableClass,
-                COALESCE(itemdb_hf.ItemSet, itemdb.ItemSet) as ItemSet,
-                COALESCE(itemdb_hf.SocketType1, itemdb.SocketType1) as SocketType1,
-                COALESCE(itemdb_hf.SocketType2, itemdb.SocketType2) as SocketType2,
-                COALESCE(itemdb_hf.SocketType3, itemdb.SocketType3) as SocketType3,
-                COALESCE(itemdb_hf.GemProperties, itemdb.GemProperties) as GemProperties,
-                COALESCE(itemdb2_hf.ClassID, itemdb2.ClassID) as ClassID,
-                COALESCE(itemdb2_hf.SubClassID, itemdb2.SubClassID) as SubClassID,
-                COALESCE(itemdb2_hf.IconFileDataID, itemdb2.IconFileDataID) as IconFileDataID,
-                icon.IconName,
+                COALESCE(itemdb_hf.OverallQualityID, itemdb.OverallQualityID) as overall_quality_id,
+                COALESCE(itemdb_hf.Flags1, itemdb.Flags1) as flags1,
+                COALESCE(itemdb_hf.ItemLevel, itemdb.ItemLevel) as item_level,
+                COALESCE(itemdb_hf.InventoryType, itemdb.InventoryType) as inventory_type,
+                COALESCE(itemdb_hf.Resistances1, itemdb.Resistances1) as resistances1,
+                COALESCE(itemdb_hf.MinDamage1, itemdb.MinDamage1) as min_damage1,
+                COALESCE(itemdb_hf.MaxDamage1, itemdb.MaxDamage1) as max_damage1,
+                COALESCE(itemdb_hf.ItemDelay, itemdb.ItemDelay) as item_delay,
+                COALESCE(itemdb_hf.StatModifierBonusStat1, itemdb.StatModifierBonusStat1) as stat_modifier_bonus_stat1,
+                COALESCE(itemdb_hf.StatModifierBonusStat2, itemdb.StatModifierBonusStat2) as stat_modifier_bonus_stat2,
+                COALESCE(itemdb_hf.StatModifierBonusStat3, itemdb.StatModifierBonusStat3) as stat_modifier_bonus_stat3,
+                COALESCE(itemdb_hf.StatModifierBonusStat4, itemdb.StatModifierBonusStat4) as stat_modifier_bonus_stat4,
+                COALESCE(itemdb_hf.StatModifierBonusStat5, itemdb.StatModifierBonusStat5) as stat_modifier_bonus_stat5,
+                COALESCE(itemdb_hf.StatModifierBonusStat6, itemdb.StatModifierBonusStat6) as stat_modifier_bonus_stat6,
+                COALESCE(itemdb_hf.StatModifierBonusAmount1, itemdb.StatModifierBonusAmount1) as stat_modifier_bonus_amount1,
+                COALESCE(itemdb_hf.StatModifierBonusAmount2, itemdb.StatModifierBonusAmount2) as stat_modifier_bonus_amount2,
+                COALESCE(itemdb_hf.StatModifierBonusAmount3, itemdb.StatModifierBonusAmount3) as stat_modifier_bonus_amount3,
+                COALESCE(itemdb_hf.StatModifierBonusAmount4, itemdb.StatModifierBonusAmount4) as stat_modifier_bonus_amount4,
+                COALESCE(itemdb_hf.StatModifierBonusAmount5, itemdb.StatModifierBonusAmount5) as stat_modifier_bonus_amount5,
+                COALESCE(itemdb_hf.StatModifierBonusAmount6, itemdb.StatModifierBonusAmount6) as stat_modifier_bonus_amount6,
+                COALESCE(itemdb_hf.MaxDurability, itemdb.MaxDurability) as max_durability,
+                COALESCE(itemdb_hf.RequiredLevel, itemdb.RequiredLevel) as required_level,
+                COALESCE(itemdb_hf.SocketMatchEnchantmentID, itemdb.SocketMatchEnchantmentID) as socket_match_enchantment_id,
+                COALESCE(itemdb_hf.AllowableClass, itemdb.AllowableClass) as allowable_class,
+                COALESCE(itemdb_hf.ItemSet, itemdb.ItemSet) as item_set,
+                COALESCE(itemdb_hf.SocketType1, itemdb.SocketType1) as socket_type1,
+                COALESCE(itemdb_hf.SocketType2, itemdb.SocketType2) as socket_type2,
+                COALESCE(itemdb_hf.SocketType3, itemdb.SocketType3) as socket_type3,
+                COALESCE(itemdb_hf.GemProperties, itemdb.GemProperties) as gem_properties,
+                COALESCE(itemdb2_hf.ClassID, itemdb2.ClassID) as class_id,
+                COALESCE(itemdb2_hf.SubClassID, itemdb2.SubClassID) as sub_class_id,
+                COALESCE(itemdb2_hf.IconFileDataID, itemdb2.IconFileDataID) as icon_file_data_id,
+                icon.IconName as icon_name,
                 COALESCE(transmogsource_hf.ID, transmogsource.ID) as transmog_appearance_id,
                 COALESCE(transmogsource_hf.ItemID, transmogsource.ItemID) as transmog_item_id,
                 COALESCE(transmog_itemdb_hf.Display, transmog_itemdb.Display) as transmog_item_name,
@@ -253,24 +253,24 @@ def load_character(name: str) -> dict:
                     SELECT GROUP_CONCAT(CONCAT(sp.ID, '::', sp.Description) SEPARATOR '||')
                     FROM web.item_effect AS eff
                     LEFT JOIN web.spell AS sp ON sp.ID = eff.SpellID
-                    WHERE eff.ParentItemID = item.itemEntry
+                    WHERE eff.ParentItemID = item.itementry
                     AND eff.TriggerType != 5
                     AND sp.Description IS NOT NULL
                     AND sp.Description != ''
-                ) as Description,
+                ) as description,
                 (
                     SELECT MIN(eff.TriggerType)
                     FROM web.item_effect AS eff
-                    WHERE eff.ParentItemID = item.itemEntry
+                    WHERE eff.ParentItemID = item.itementry
                     AND eff.TriggerType != 5
-                ) as TriggerType
+                ) as trigger_type
                 FROM characters.item_instance AS item
                 INNER JOIN characters.characters AS `char` ON item.owner_guid = `char`.guid
                 INNER JOIN characters.character_inventory AS inv ON item.guid = inv.item AND inv.bag = 0 AND inv.slot <= 18
-                LEFT JOIN web.item_sparse AS itemdb ON itemdb.ID = item.itemEntry
-                LEFT JOIN hotfixes.item_sparse AS itemdb_hf ON itemdb_hf.ID = item.itemEntry
-                LEFT JOIN web.item AS itemdb2 ON itemdb2.ID = item.itemEntry
-                LEFT JOIN hotfixes.item AS itemdb2_hf ON itemdb2_hf.ID = item.itemEntry
+                LEFT JOIN web.item_sparse AS itemdb ON itemdb.ID = item.itementry
+                LEFT JOIN hotfixes.item_sparse AS itemdb_hf ON itemdb_hf.ID = item.itementry
+                LEFT JOIN web.item AS itemdb2 ON itemdb2.ID = item.itementry
+                LEFT JOIN hotfixes.item AS itemdb2_hf ON itemdb2_hf.ID = item.itementry
                 LEFT JOIN characters.item_instance_transmog AS transmog ON transmog.itemGuid = item.guid
                 LEFT JOIN web.icon_data AS icon ON icon.DataFileID = itemdb2.IconFileDataID
                 LEFT JOIN web.item_modified_appearance AS transmogsource ON transmogsource.ID = transmog.itemModifiedAppearanceAllSpecs
@@ -308,20 +308,20 @@ def load_character(name: str) -> dict:
                     if enchant:
                         enchantments.append({"index": idx / 3, **enchant})
                 new_item = ({**item, "enchantments": enchantments})
-                new_item["slot_name"] = get_slot_name(item["InventoryType"])
+                new_item["slot_name"] = get_slot_name(item["inventory_type"])
                 equipped_items.append(new_item)
 
             for item in equipped_items:
-                raw = item.get("Description") or ""
+                raw = item.get("description") or ""
                 parsed_spells = []
                 for part in raw.split("||"):
                     if "::" not in part:
                         continue
                     spell_id_str, desc = part.split("::", 1)
-                    parsed_spells.append({"spellId": int(spell_id_str), "Description": desc})
+                    parsed_spells.append({"spell_id": int(spell_id_str), "description": desc})
  
                 resolve_spell_descriptions(parsed_spells, cursor)
-                item["Description"] = "||".join(sp["Description"] for sp in parsed_spells)
+                item["description"] = "||".join(sp["description"] for sp in parsed_spells)
 
             # char info
             cursor.execute(f"""
@@ -331,7 +331,7 @@ def load_character(name: str) -> dict:
                     characters.class,
                     characters.level,
                     characters.chosenTitle as title,
-                    COALESCE(title_db_hf.Name, title_db.Name) as actual_title,
+                    COALESCE(title_db_hf.Name, title_db.Name) as title_name,
                     guild.name as guild_name,
                     (
                         SELECT tt.Name
@@ -423,9 +423,9 @@ def load_character(name: str) -> dict:
 
             # item sets
             set_ids = list({
-                item["ItemSet"]
+                item["item_set"]
                 for item in equipped_items_data
-                if item.get("ItemSet") and item["ItemSet"] != 0
+                if item.get("item_set") and item["item_set"] != 0
             })
 
             item_set_data = {}
@@ -479,15 +479,15 @@ def load_character(name: str) -> dict:
                     ]
                     equipped_set_items = [
                         item for item in equipped_items_data
-                        if item.get("ItemSet") == s["ID"]
+                        if item.get("item_set") == s["ID"]
                     ]
                     equipped_count = len(equipped_set_items)
                     # map InventoryType to equipped item
-                    equipped_by_inv_type = {item["InventoryType"]: item for item in equipped_set_items}
+                    equipped_by_inv_type = {item["inventory_type"]: item for item in equipped_set_items}
 
                     pieces = [
                         {
-                            "itemId": fid,
+                            "item_id": fid,
                             "name": equipped_by_inv_type.get(set_item_inv_types.get(fid), {}).get("item_name")
                                     or set_item_names_by_id.get(fid, f"Item {fid}"),
                             "equipped": set_item_inv_types.get(fid) in equipped_by_inv_type,
@@ -497,11 +497,11 @@ def load_character(name: str) -> dict:
                     item_set_data[s["ID"]] = {
                         "id": s["ID"],
                         "name": s["Name"],
-                        "equippedCount": equipped_count,
+                        "equipped_count": equipped_count,
                         "pieces": pieces,
                         "spells": [
                             {
-                                "spellId": spell["SpellID"],
+                                "spell_id": spell["SpellID"],
                                 "threshold": spell["threshold"],
                                 "description": spell["description"],
                                 "active": equipped_count >= spell["threshold"],
@@ -517,10 +517,10 @@ def load_character(name: str) -> dict:
         conn.close()
 
     return {
-        "charInfo": char_info,
-        "charStats": char_stats,
-        "equippedItems": equipped_items,
-        "itemSetData": item_set_data,
+        "char_info": char_info,
+        "char_stats": char_stats,
+        "equipped_items": equipped_items,
+        "item_set_data": item_set_data,
         "average_item_level": compute_average_item_level(equipped_items),
         "char_skills": char_skills
     }

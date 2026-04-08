@@ -68,7 +68,7 @@ def get_race_name(race_id: int) -> str:
 
 def compute_average_item_level(equipped_items: list[dict]) -> float:
     ilvl_by_slot = {
-        item["slot"]: item["ItemLevel"]
+        item["slot"]: item["item_level"]
         for item in equipped_items
         if item["slot"] in GEAR_SLOTS
     }
@@ -81,11 +81,11 @@ def compute_average_item_level(equipped_items: list[dict]) -> float:
 
     # 2H weapon: also add its ilvl for the offhand slot
     two_hander = next(
-        (item for item in equipped_items if item["InventoryType"] in TWO_HAND_INVENTORY_TYPE),
+        (item for item in equipped_items if item["inventory_type"] in TWO_HAND_INVENTORY_TYPE),
         None
     )
 
     if two_hander:
-        total += two_hander["ItemLevel"]
+        total += two_hander["item_level"]
 
     return int(total / len(GEAR_SLOTS))

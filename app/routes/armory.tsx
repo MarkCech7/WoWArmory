@@ -39,68 +39,68 @@ import {
   sanitizeStat,
 } from "~/components/stats";
 
-type SlotData = Route.ComponentProps["loaderData"]["equippedItems"][number];
+type SlotData = Route.ComponentProps["loaderData"]["equipped_items"][number];
 type SetSpell = {
-  spellId: number;
+  spell_id: number;
   threshold: number;
   description: string;
   active: boolean;
 };
-type SetPiece = { itemId: number; name: string; equipped: boolean };
+type SetPiece = { item_id: number; name: string; equipped: boolean };
 type ItemSetInfo = {
   id: number;
   name: string;
-  equippedCount: number;
+  equipped_count: number;
   pieces: SetPiece[];
   spells: SetSpell[];
 };
 type Enchantment = { index: number; id: number; name: string };
 type EquippedItem = {
   item_guid: number;
-  itemEntry: number;
+  item_entry: number;
   owner: number;
   enchantments: Enchantment[];
   slot: number;
   char_guid: number;
   item_name: string;
-  OverallQualityID: number;
-  Flags1: number;
-  ItemLevel: number;
-  InventoryType: number;
-  Resistances1: number;
-  MinDamage1: number;
-  MaxDamage1: number;
-  ItemDelay: number;
-  StatModifierBonusStat1: number;
-  StatModifierBonusStat2: number;
-  StatModifierBonusStat3: number;
-  StatModifierBonusStat4: number;
-  StatModifierBonusStat5: number;
-  StatModifierBonusStat6: number;
-  StatModifierBonusAmount1: number;
-  StatModifierBonusAmount2: number;
-  StatModifierBonusAmount3: number;
-  StatModifierBonusAmount4: number;
-  StatModifierBonusAmount5: number;
-  StatModifierBonusAmount6: number;
-  MaxDurability: number;
-  RequiredLevel: number;
-  SocketMatchEnchantmentID: number;
-  AllowableClass: number;
-  ItemSet: number;
-  SocketType1: number;
-  SocketType2: number;
-  SocketType3: number;
-  GemProperties: number;
-  ClassID: number;
-  SubClassID: number;
-  IconFileDataID: number;
-  IconName: string;
+  overall_quality_id: number;
+  flags1: number;
+  item_level: number;
+  inventory_type: number;
+  resistances1: number;
+  min_damage1: number;
+  max_damage1: number;
+  item_delay: number;
+  stat_modifier_bonus_stat1: number;
+  stat_modifier_bonus_stat2: number;
+  stat_modifier_bonus_stat3: number;
+  stat_modifier_bonus_stat4: number;
+  stat_modifier_bonus_stat5: number;
+  stat_modifier_bonus_stat6: number;
+  stat_modifier_bonus_amount1: number;
+  stat_modifier_bonus_amount2: number;
+  stat_modifier_bonus_amount3: number;
+  stat_modifier_bonus_amount4: number;
+  stat_modifier_bonus_amount5: number;
+  stat_modifier_bonus_amount6: number;
+  max_durability: number;
+  required_level: number;
+  socket_match_enchantment_id: number;
+  allowable_class: number;
+  item_set: number;
+  socket_type1: number;
+  socket_type2: number;
+  socket_type3: number;
+  gem_properties: number;
+  class_id: number;
+  sub_class_id: number;
+  icon_file_data_id: number;
+  icon_name: string;
   transmog_appearance_id: number | null;
   transmog_item_id: number | null;
   transmog_item_name: string | null;
-  Description: string | null;
-  TriggerType: number | null;
+  description: string | null;
+  trigger_type: number | null;
 };
 
 export async function loader({ params, request }: Route.LoaderArgs) {
@@ -119,19 +119,19 @@ function ArmorSlot(props: {
   slotNumber: number;
   side?: "left" | "right";
   isCenter?: boolean;
-  itemSetData: Record<number, ItemSetInfo>;
+  item_set_data: Record<number, ItemSetInfo>;
 }) {
   const iconToDisplay = props.slot
-    ? props.slot.IconName
+    ? props.slot.icon_name
     : emptySlotIcon(props.slotNumber);
 
   const itemName = props.slot ? props.slot.item_name : `Empty slot`;
   const isLeft = props.side === "left";
 
   const baseSocketColors = [
-    props.slot?.SocketType1,
-    props.slot?.SocketType2,
-    props.slot?.SocketType3,
+    props.slot?.socket_type1,
+    props.slot?.socket_type2,
+    props.slot?.socket_type3,
   ].filter(Boolean) as number[];
 
   const SOCKET_ENCHANT_IDS = [3717, 3723, 3729];
@@ -157,7 +157,7 @@ function ArmorSlot(props: {
           className={
             props.slot
               ? `border-1 ${itemBorderColor(
-                  props.slot.OverallQualityID,
+                  props.slot.overall_quality_id,
                 )} rounded-md`
               : ""
           }
@@ -254,7 +254,7 @@ function ArmorSlot(props: {
                   height: "100%",
                 }}
                 className={`border-1 ${itemBorderColor(
-                  props.slot.OverallQualityID,
+                  props.slot.overall_quality_id,
                 )} rounded-md`}
               />
               {props.slot.transmog_item_name && (
@@ -277,7 +277,7 @@ function ArmorSlot(props: {
           >
             <span
               className={`${getQualityTextColor(
-                props.slot.OverallQualityID,
+                props.slot.overall_quality_id,
               )} whitespace-nowrap [text-shadow:0_0_4px_black]`}
             >
               {itemName}
@@ -305,7 +305,7 @@ function ArmorSlot(props: {
                   marginLeft: isLeft ? "0" : "0.15rem",
                 }}
               >
-                {props.slot.ItemLevel}
+                {props.slot.item_level}
               </span>
               <div
                 style={{
@@ -340,26 +340,26 @@ function ArmorSlot(props: {
           >
             <div
               className={`${getQualityTextColor(
-                props.slot.OverallQualityID,
+                props.slot.overall_quality_id,
               )} text-[14px]`}
             >
               {props.slot.item_name}
             </div>
             <div className="text-wow-uncommon">
-              {isHeroic(props.slot.Flags1) && (
+              {isHeroic(props.slot.flags1) && (
                 <span
                   className={
-                    getSeasonalText(props.slot.itemEntry)
+                    getSeasonalText(props.slot.item_entry)
                       ? "text-wow-season"
                       : "text-wow-heroic"
                   }
                 >
-                  {getSeasonalText(props.slot.itemEntry) || "Heroic"}
+                  {getSeasonalText(props.slot.item_entry) || "Heroic"}
                 </span>
               )}
             </div>
             <div className="text-wow-gold">
-              Item Level {props.slot.ItemLevel}
+              Item Level {props.slot.item_level}
             </div>
             {props.slot.transmog_item_name ? (
               <div className="text-wow-transmog">
@@ -373,34 +373,30 @@ function ArmorSlot(props: {
               <div className="text-gray-300">{props.slot.slot_name}</div>
               <div className="text-gray-300">
                 <ItemClass
-                  class={props.slot.ClassID}
-                  subClass={props.slot.SubClassID}
+                  class={props.slot.class_id}
+                  subClass={props.slot.sub_class_id}
                 />
               </div>
             </div>
             <div>
-              {props.slot.Resistances1 ? (
-                <div>
-                  {" "}
-                  {props.slot.Resistances1.toLocaleString("en-US")} Armor
-                </div>
+              {props.slot.resistances1 ? (
+                <div> {props.slot.resistances1} Armor</div>
               ) : null}
             </div>
             <div>
-              {props.slot.MinDamage1 && props.slot.MaxDamage1 ? (
+              {props.slot.min_damage1 && props.slot.max_damage1 ? (
                 <div>
                   <div className="flex flex-row justify-between">
                     <div>
-                      {props.slot.MinDamage1.toLocaleString("en-US")} -{" "}
-                      {props.slot.MaxDamage1.toLocaleString("en-US")} Damage{" "}
+                      {props.slot.min_damage1} - {props.slot.max_damage1} Damage{" "}
                     </div>
-                    <div>{calculateWeaponSpeed(props.slot.ItemDelay)}</div>
+                    <div>{calculateWeaponSpeed(props.slot.item_delay)}</div>
                   </div>
                   <div>
                     {calculateWeaponDPS(
-                      props.slot.MinDamage1,
-                      props.slot.MaxDamage1,
-                      props.slot.ItemDelay,
+                      props.slot.min_damage1,
+                      props.slot.max_damage1,
+                      props.slot.item_delay,
                     )}
                   </div>
                 </div>
@@ -444,10 +440,10 @@ function ArmorSlot(props: {
                 </div>
               ) : (
                 <div className="text-wow-gray">
-                  {props.slot.SocketMatchEnchantmentID ? (
+                  {props.slot.socket_match_enchantment_id ? (
                     <>
                       Socket Bonus:{" "}
-                      {getGemBonusById(props.slot.SocketMatchEnchantmentID)}
+                      {getGemBonusById(props.slot.socket_match_enchantment_id)}
                       <div className="pb-[10px]" />
                     </>
                   ) : null}
@@ -455,37 +451,37 @@ function ArmorSlot(props: {
               )}
             </div>
             <div>
-              {props.slot.MaxDurability
-                ? `Durability: ${props.slot.MaxDurability} /${" "}
-              ${props.slot.MaxDurability}`
+              {props.slot.max_durability
+                ? `Durability: ${props.slot.max_durability} /${" "}
+              ${props.slot.max_durability}`
                 : null}
             </div>
             <div>
-              {getAllowedClasses(props.slot.AllowableClass, classBitmask) ||
+              {getAllowedClasses(props.slot.allowable_class, classBitmask) ||
                 null}
             </div>
             <div>
-              {props.slot.RequiredLevel && props.slot.RequiredLevel > 1
-                ? `Requires Level ${props.slot.RequiredLevel} `
+              {props.slot.required_level && props.slot.required_level > 1
+                ? `Requires Level ${props.slot.required_level} `
                 : null}
             </div>
             <div className="text-wow-uncommon">
               {formatSecondaryStats(props.slot)}
             </div>
             <div className="text-wow-uncommon">
-              {props.slot.Description
-                ? props.slot.Description.split("||").map(
-                    (desc: string, i: number) => (
+              {props.slot.description
+                ? props.slot.description
+                    .split("||")
+                    .map((desc: string, i: number) => (
                       <div key={i}>
-                        {formatSpellTooltip(props.slot.TriggerType, desc)}
+                        {formatSpellTooltip(props.slot.trigger_type, desc)}
                       </div>
-                    ),
-                  )
+                    ))
                 : null}
-              {props.slot.ItemSet ? (
+              {props.slot.item_set ? (
                 <ItemSetTooltip
-                  setId={props.slot.ItemSet}
-                  itemSetData={props.itemSetData}
+                  setId={props.slot.item_set}
+                  itemSetData={props.item_set_data}
                 />
               ) : null}
             </div>
@@ -498,17 +494,17 @@ function ArmorSlot(props: {
 
 export default function Armory(props: Route.ComponentProps) {
   let {
-    equippedItems,
-    charInfo,
-    charStats,
-    itemSetData,
+    equipped_items,
+    char_info,
+    char_stats,
+    item_set_data,
     average_item_level,
     char_skills,
   } = props.loaderData as {
-    equippedItems: EquippedItem[];
-    charInfo: any;
-    charStats: any;
-    itemSetData: Record<string, ItemSetInfo>;
+    equipped_items: EquippedItem[];
+    char_info: any;
+    char_stats: any;
+    item_set_data: Record<string, ItemSetInfo>;
     average_item_level: any;
     char_skills: any[];
   };
@@ -516,17 +512,17 @@ export default function Armory(props: Route.ComponentProps) {
   const { setCharacterName } = useChatContext();
 
   useEffect(() => {
-    setCharacterName(charInfo.name);
+    setCharacterName(char_info.name);
     return () => setCharacterName(undefined);
-  }, [charInfo.name]);
+  }, [char_info.name]);
 
   const equippedItemsObject: Record<number, EquippedItem> = {};
-  equippedItems.forEach((item: EquippedItem) => {
+  equipped_items.forEach((item: EquippedItem) => {
     equippedItemsObject[item.slot] = item;
   });
 
-  let charTitle = charInfo.actual_title;
-  let charName = charInfo.name;
+  let charTitle = char_info.title_name;
+  let charName = char_info.name;
 
   if (charTitle) {
     charName = charTitle.replace("%s", charName);
@@ -534,7 +530,7 @@ export default function Armory(props: Route.ComponentProps) {
 
   return (
     <div className="max-w-[1300px] mx-auto gap-0.5 mt-5 h-[1600px] bg-content-dark-50 border-t rounded-2xl overflow-hidden">
-      <ArmoryBackground raceId={charInfo.race}>
+      <ArmoryBackground raceId={char_info.race}>
         <div className="w-full pt-7 pl-10 pr-10">
           <div className="pb-4 border-b border-b-article-border">
             <ul className="flex gap-4 text-wow-stagger pl-10 pr-10">
@@ -553,7 +549,7 @@ export default function Armory(props: Route.ComponentProps) {
           <div className="pt-2 pb-2">
             <div className="relative w-full">
               <div className="absolute -ml-24 -mt-1">
-                <ArmoryFaction raceId={charInfo.race} />
+                <ArmoryFaction raceId={char_info.race} />
               </div>
               <div className="flex justify-between items-baseline">
                 <div className="text-3xl font-bold">{charName}</div>
@@ -566,13 +562,13 @@ export default function Armory(props: Route.ComponentProps) {
               </div>
               <div className="flex justify-between items-center">
                 <div className="pb-2 font-bold text-lg">
-                  <NameColor class={charInfo.class_name}>
-                    <span className="font-extrabold">{charInfo.level}</span>{" "}
-                    <span>{charInfo.race_name}</span>{" "}
-                    <span>{charInfo.spec_name}</span>{" "}
-                    <span>{charInfo.class_name}</span>
+                  <NameColor class={char_info.class_name}>
+                    <span className="font-extrabold">{char_info.level}</span>{" "}
+                    <span>{char_info.race_name}</span>{" "}
+                    <span>{char_info.spec_name}</span>{" "}
+                    <span>{char_info.class_name}</span>
                   </NameColor>{" "}
-                  <span className="text-wow-gold">{charInfo.guild_name}</span>
+                  <span className="text-wow-gold">{char_info.guild_name}</span>
                 </div>
                 <div className="text-sm text-gray-400 whitespace-nowrap mb-2">
                   (Average Item Level)
@@ -586,49 +582,49 @@ export default function Armory(props: Route.ComponentProps) {
                 slot={equippedItemsObject[0]}
                 slotNumber={0}
                 side="left"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[1]}
                 slotNumber={1}
                 side="left"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[2]}
                 slotNumber={2}
                 side="left"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[14]}
                 slotNumber={14}
                 side="left"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[4]}
                 slotNumber={4}
                 side="left"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[3]}
                 slotNumber={3}
                 side="left"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[18]}
                 slotNumber={18}
                 side="left"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[8]}
                 slotNumber={8}
                 side="left"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
             </div>
             <div className="flex flex-col gap-0.5">
@@ -636,49 +632,49 @@ export default function Armory(props: Route.ComponentProps) {
                 slot={equippedItemsObject[9]}
                 slotNumber={9}
                 side="right"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[5]}
                 slotNumber={5}
                 side="right"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[6]}
                 slotNumber={6}
                 side="right"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[7]}
                 slotNumber={7}
                 side="right"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[10]}
                 slotNumber={10}
                 side="right"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[11]}
                 slotNumber={11}
                 side="right"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[12]}
                 slotNumber={12}
                 side="right"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
               <ArmorSlot
                 slot={equippedItemsObject[13]}
                 slotNumber={13}
                 side="right"
-                itemSetData={itemSetData ?? {}}
+                item_set_data={item_set_data ?? {}}
               ></ArmorSlot>
             </div>
           </div>
@@ -687,20 +683,20 @@ export default function Armory(props: Route.ComponentProps) {
               slot={equippedItemsObject[15]}
               slotNumber={15}
               side="right"
-              itemSetData={itemSetData ?? {}}
+              item_set_data={item_set_data ?? {}}
             />
             <ArmorSlot
               slot={equippedItemsObject[16]}
               slotNumber={16}
               isCenter={!equippedItemsObject[16]}
               side="left"
-              itemSetData={itemSetData ?? {}}
+              item_set_data={item_set_data ?? {}}
             />
             <ArmorSlot
               slot={equippedItemsObject[17]}
               slotNumber={17}
               side="left"
-              itemSetData={itemSetData ?? {}}
+              item_set_data={item_set_data ?? {}}
             />
           </div>
         </div>
@@ -723,68 +719,68 @@ export default function Armory(props: Route.ComponentProps) {
                       <StatSection title="Attributes">
                         <StatRow
                           label="Strength"
-                          value={charStats.strength}
-                          highlight={charStats.strength > 1200}
+                          value={char_stats.strength}
+                          highlight={char_stats.strength > 1200}
                         />
                         <StatRow
                           label="Agility"
-                          value={charStats.agility}
-                          highlight={charStats.agility > 1200}
+                          value={char_stats.agility}
+                          highlight={char_stats.agility > 1200}
                         />
                         <StatRow
                           label="Stamina"
-                          value={charStats.stamina}
-                          highlight={charStats.stamina > 1200}
+                          value={char_stats.stamina}
+                          highlight={char_stats.stamina > 1200}
                         />
                         <StatRow
                           label="Intellect"
-                          value={charStats.intellect}
-                          highlight={charStats.intellect > 1200}
+                          value={char_stats.intellect}
+                          highlight={char_stats.intellect > 1200}
                         />
                         <StatRow
                           label="Spirit"
-                          value={charStats.spirit}
-                          highlight={charStats.spirit > 1200}
+                          value={char_stats.spirit}
+                          highlight={char_stats.spirit > 1200}
                         />
-                        <StatRow label="Armor" value={charStats.armor} />
+                        <StatRow label="Armor" value={char_stats.armor} />
                       </StatSection>
                     </div>
                     <div className="flex-1">
                       <StatSection title="Ranged">
                         <StatRow
                           label="Damage"
-                          value={`${charStats.ranged_dmg_min ?? 0} – ${
-                            charStats.ranged_dmg_max ?? 0
+                          value={`${char_stats.ranged_dmg_min ?? 0} – ${
+                            char_stats.ranged_dmg_max ?? 0
                           }`}
                         />
                         <StatRow
                           label="Attack Power"
                           value={sanitizeStat(
-                            charStats.ranged_attack_power ?? 0,
+                            char_stats.ranged_attack_power ?? 0,
                           )}
                         />
                         <StatRow
                           label="Speed"
-                          value={(charStats.ranged_speed ?? 0).toFixed(2)}
+                          value={(char_stats.ranged_speed ?? 0).toFixed(2)}
                         />
                         <StatRow
                           label="Haste"
-                          value={(charStats.ranged_haste ?? 0).toFixed(2)}
+                          value={(char_stats.ranged_haste ?? 0).toFixed(2)}
                           suffix="%"
                         />
                         <StatRow
                           label="Hit"
-                          value={(charStats.ranged_hit ?? 0).toFixed(2)}
+                          value={(char_stats.ranged_hit ?? 0).toFixed(2)}
                           suffix="%"
                         />
                         <StatRow
                           label="Critical Strike"
-                          value={(charStats.ranged_crit_pct ?? 0).toFixed(2)}
+                          value={(char_stats.ranged_crit_pct ?? 0).toFixed(2)}
                           suffix="%"
                         />
                         <StatRow
                           label="Armor Penetration"
-                          value={(charStats.ranged_arp ?? 0).toFixed(2)}
+                          value={(char_stats.ranged_arp ?? 0).toFixed(2)}
                         />
                       </StatSection>
                     </div>
@@ -796,41 +792,41 @@ export default function Armory(props: Route.ComponentProps) {
                       <StatSection title="Melee">
                         <StatRow
                           label="Damage"
-                          value={`${charStats.melee_dmg_min ?? 0} – ${
-                            charStats.melee_dmg_max ?? 0
+                          value={`${char_stats.melee_dmg_min ?? 0} – ${
+                            char_stats.melee_dmg_max ?? 0
                           }`}
                         />
                         <StatRow
                           label="Attack Power"
-                          value={charStats.attack_power ?? 0}
+                          value={char_stats.attack_power ?? 0}
                         />
                         <StatRow
                           label="Speed"
-                          value={(charStats.melee_speed ?? 0).toFixed(2)}
+                          value={(char_stats.melee_speed ?? 0).toFixed(2)}
                         />
                         <StatRow
                           label="Haste"
-                          value={(charStats.haste ?? 0).toFixed(2)}
+                          value={(char_stats.haste ?? 0).toFixed(2)}
                           suffix="%"
                         />
                         <StatRow
                           label="Hit"
-                          value={(charStats.hit ?? 0).toFixed(2)}
+                          value={(char_stats.hit ?? 0).toFixed(2)}
                           suffix="%"
                         />
                         <StatRow
                           label="Critical Strike"
-                          value={(charStats.crit_pct ?? 0).toFixed(2)}
+                          value={(char_stats.crit_pct ?? 0).toFixed(2)}
                           suffix="%"
                         />
                         <StatRow
                           label="Armor Penetration"
-                          value={(charStats.arp ?? 0).toFixed(2)}
+                          value={(char_stats.arp ?? 0).toFixed(2)}
                           suffix="%"
                         />
                         <StatRow
                           label="Expertise"
-                          value={charStats.expertise ?? 0}
+                          value={char_stats.expertise ?? 0}
                         />
                       </StatSection>
                     </div>
@@ -838,33 +834,33 @@ export default function Armory(props: Route.ComponentProps) {
                       <StatSection title="Spell">
                         <StatRow
                           label="Spell Power"
-                          value={charStats.spell_power ?? 0}
+                          value={char_stats.spell_power ?? 0}
                         />
                         <StatRow
                           label="Haste"
-                          value={(charStats.spell_haste ?? 0).toFixed(2)}
+                          value={(char_stats.spell_haste ?? 0).toFixed(2)}
                           suffix="%"
                         />
                         <StatRow
                           label="Hit"
-                          value={(charStats.spell_hit ?? 0).toFixed(2)}
+                          value={(char_stats.spell_hit ?? 0).toFixed(2)}
                           suffix="%"
                         />
                         <StatRow
                           label="Spell Penetration"
-                          value={(charStats.spell_pen ?? 0).toFixed(2)}
+                          value={(char_stats.spell_pen ?? 0).toFixed(2)}
                         />
                         <StatRow
                           label="Mana Regen"
-                          value={(charStats.mana_regen ?? 0).toFixed(2)}
+                          value={(char_stats.mana_regen ?? 0).toFixed(2)}
                         />
                         <StatRow
                           label="Combat Regen"
-                          value={(charStats.combat_regen ?? 0).toFixed(2)}
+                          value={(char_stats.combat_regen ?? 0).toFixed(2)}
                         />
                         <StatRow
                           label="Critical Strike"
-                          value={(charStats.spell_crit_pct ?? 0).toFixed(2)}
+                          value={(char_stats.spell_crit_pct ?? 0).toFixed(2)}
                           suffix="%"
                         />
                       </StatSection>
@@ -877,20 +873,23 @@ export default function Armory(props: Route.ComponentProps) {
                       <StatSection title="Resistances">
                         <StatRow
                           label="Arcane"
-                          value={charStats.res_arcane ?? 0}
+                          value={char_stats.res_arcane ?? 0}
                         />
-                        <StatRow label="Fire" value={charStats.res_fire ?? 0} />
+                        <StatRow
+                          label="Fire"
+                          value={char_stats.res_fire ?? 0}
+                        />
                         <StatRow
                           label="Frost"
-                          value={charStats.res_frost ?? 0}
+                          value={char_stats.res_frost ?? 0}
                         />
                         <StatRow
                           label="Nature"
-                          value={charStats.res_nature ?? 0}
+                          value={char_stats.res_nature ?? 0}
                         />
                         <StatRow
                           label="Shadow"
-                          value={charStats.res_shadow ?? 0}
+                          value={char_stats.res_shadow ?? 0}
                         />
                       </StatSection>
                     </div>
@@ -898,26 +897,26 @@ export default function Armory(props: Route.ComponentProps) {
                       <StatSection title="Defense">
                         <StatRow
                           label="Defense"
-                          value={charStats.defense ?? 0}
+                          value={char_stats.defense ?? 0}
                         />
                         <StatRow
                           label="Dodge"
-                          value={(charStats.dodge ?? 0).toFixed(2)}
+                          value={(char_stats.dodge ?? 0).toFixed(2)}
                           suffix="%"
                         />
                         <StatRow
                           label="Parry"
-                          value={(charStats.parry ?? 0).toFixed(2)}
+                          value={(char_stats.parry ?? 0).toFixed(2)}
                           suffix="%"
                         />
                         <StatRow
                           label="Block"
-                          value={(charStats.block ?? 0).toFixed(2)}
+                          value={(char_stats.block ?? 0).toFixed(2)}
                           suffix="%"
                         />
                         <StatRow
                           label="Resilience"
-                          value={charStats.resilience ?? 0}
+                          value={char_stats.resilience ?? 0}
                         />
                       </StatSection>
                     </div>
@@ -932,7 +931,7 @@ export default function Armory(props: Route.ComponentProps) {
                 <div className="font-bold text-white pb-4 text-armory-section-title">
                   General
                 </div>
-                <GeneralStats charInfo={charInfo} charStats={charStats} />
+                <GeneralStats charInfo={char_info} charStats={char_stats} />
               </div>
 
               <div className="bg-armory-stat-section rounded-md p-6 flex flex-col gap-[9px]">

@@ -16,9 +16,9 @@ type Stat = {
   value: number;
 };
 
-type SetPiece = { itemId: number; name: string; equipped: boolean };
+type SetPiece = { item_id: number; name: string; equipped: boolean };
 type SetSpell = {
-  spellId: number;
+  spell_id: number;
   threshold: number;
   description: string;
   active: boolean;
@@ -26,7 +26,7 @@ type SetSpell = {
 type ItemSetInfo = {
   id: number;
   name: string;
-  equippedCount: number;
+  equipped_count: number;
   pieces: SetPiece[];
   spells: SetSpell[];
 };
@@ -75,12 +75,30 @@ export function formatSecondaryStat(statId: number, statValue: number) {
 
 function collectStats(slot: any): Stat[] {
   return [
-    { type: slot.StatModifierBonusStat1, value: slot.StatModifierBonusAmount1 },
-    { type: slot.StatModifierBonusStat2, value: slot.StatModifierBonusAmount2 },
-    { type: slot.StatModifierBonusStat3, value: slot.StatModifierBonusAmount3 },
-    { type: slot.StatModifierBonusStat4, value: slot.StatModifierBonusAmount4 },
-    { type: slot.StatModifierBonusStat5, value: slot.StatModifierBonusAmount5 },
-    { type: slot.StatModifierBonusStat6, value: slot.StatModifierBonusAmount6 },
+    {
+      type: slot.stat_modifier_bonus_stat1,
+      value: slot.stat_modifier_bonus_amount1,
+    },
+    {
+      type: slot.stat_modifier_bonus_stat2,
+      value: slot.stat_modifier_bonus_amount2,
+    },
+    {
+      type: slot.stat_modifier_bonus_stat3,
+      value: slot.stat_modifier_bonus_amount3,
+    },
+    {
+      type: slot.stat_modifier_bonus_stat4,
+      value: slot.stat_modifier_bonus_amount4,
+    },
+    {
+      type: slot.stat_modifier_bonus_stat5,
+      value: slot.stat_modifier_bonus_amount5,
+    },
+    {
+      type: slot.stat_modifier_bonus_stat6,
+      value: slot.stat_modifier_bonus_amount6,
+    },
   ].filter((s) => s.type > 0 && s.value > 0);
 }
 
@@ -219,11 +237,11 @@ export function ItemSetTooltip({
     <div className="mt-1">
       <div className="pb-[10px]" />
       <div className="text-wow-gold">
-        {set.name.replace(/"/g, "")} ({set.equippedCount}/{set.pieces.length})
+        {set.name.replace(/"/g, "")} ({set.equipped_count}/{set.pieces.length})
       </div>
       {set.pieces.map((piece) => (
         <div
-          key={piece.itemId}
+          key={piece.item_id}
           className={`pl-2 ${
             piece.equipped ? "text-wow-stagger pl-2" : "text-wow-gray pl-2"
           }`}
@@ -234,7 +252,7 @@ export function ItemSetTooltip({
       {set.spells.length > 0 && <div className="pb-[6px]" />}
       {set.spells.map((spell) => (
         <div
-          key={spell.spellId}
+          key={spell.spell_id}
           className={spell.active ? "text-wow-uncommon" : "text-wow-gray"}
         >
           {!spell.active && `(${spell.threshold}) `}
