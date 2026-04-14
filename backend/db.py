@@ -9,24 +9,27 @@ PORT = int(os.getenv("DB_PORT"))
 USER = os.getenv("DB_USER")
 PASSWORD = os.getenv("DB_PASSWORD")
     
-def query_web_db(sql: str) -> str:
+def query_web_db(sql: str, raw: bool = False) -> str | list[dict]:
     try:
         conn = get_web_connection()
         with conn.cursor() as cursor:
             cursor.execute(sql)
             rows = cursor.fetchall()
-            
+
             if not rows:
-                return "No results found."
-            
+                return [] if raw else "No results found."
+
+            if raw:
+                return rows
+
             lines = [" | ".join(str(v) for v in rows[0].keys())]
             lines += [" | ".join(str(v) for v in row.values()) for row in rows[:20]]
             if len(rows) > 20:
                 lines.append(f"... and {len(rows) - 20} more rows")
             return "\n".join(lines)
-    
+
     except Exception as e:
-        return f"DB Error: {str(e)}"
+        return [] if raw else f"DB Error: {str(e)}"
 
 def get_auth_connection():
     return pymysql.connect(

@@ -3,9 +3,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_ollama import ChatOllama
 from dotenv import load_dotenv
-from db import query_web_db
+from db import query_web_db, get_web_connection
 from rag import similarity_search_articles, similarity_search_characters
-from utils import CLASS_NAMES, RACE_NAMES, HORDE_RACES, ALLIANCE_RACES
+from utils import CLASS_NAMES, RACE_NAMES, HORDE_RACES, ALLIANCE_RACES, resolve_single_spell_description
 import os, math
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
@@ -32,9 +32,16 @@ arena_leaderboards_prompt = ChatPromptTemplate.from_template(
     "and that user can visit arena leaderboards pages. Do not include any URL. Just the message, nothing else. Query: {query}"
 )
 
+spell_intro_prompt = ChatPromptTemplate.from_template(
+    "Generate exactly one short, friendly sentence to introduce a spell tooltip. "
+    "Examples: 'Sure! here is the spell tooltip.', 'Here you go!', 'Let me show you that spell.', 'Here is what I found!'. "
+    "Output only the sentence."
+)
+
 character_found_chain = existing_character_prompt | llm | parser
 character_not_found_chain = non_existing_character_prompt | llm | parser
 arena_leaderboards_chain = arena_leaderboards_prompt | llm | parser
+spell_intro_chain = spell_intro_prompt | llm | parser
 
 @tool
 def list_characters_by_class(class_name: str) -> str:
@@ -248,6 +255,63 @@ def get_arena_leaderboards_url(query: str) -> str:
      
     return f"{phrase}\nYou can visit leaderboards here: <a href=\"/leaderboards/2v2\" target=\"_blank\">2v2 Arena Ladder</a>, <a href=\"/leaderboards/3v3\" target=\"_blank\">3v3 Arena Ladder</a>"
 
+@tool(return_direct=True)
+def get_spell_description(query: str) -> str:
+    """
+    Get the description for a spell by name.
+    Use this when the user asks for information about a specific spell.
+    Example: "What does Shadow Bolt do?" or "Describe the spell Fireball."
+    Input must be the spell name string.
+    """
+    for word in ["ability", "spell", "description"]:
+        query = query.replace(word, "").strip()
+
+    name_result = query_web_db(f"""
+        SELECT `Name` FROM web.spell_name
+        WHERE LOWER(`Name`) = LOWER('"{query}"')
+        LIMIT 1
+    """, raw=True)
+
+    if not name_result:
+        return f"Could not find spell: {query}"
+
+    actual_name = name_result[0]["Name"]
+
+    result = query_web_db(f"""
+        SELECT sn.ID, sp.`Description`, icd.`IconName`
+        FROM web.spell_name AS sn
+        LEFT JOIN web.spell AS sp ON sn.ID = sp.ID
+        LEFT JOIN web.spell_class_options AS sco ON sn.ID = sco.SpellID
+        LEFT JOIN web.spell_misc AS sm ON sn.ID = sm.SpellID
+        LEFT JOIN web.icon_data as icd ON sm.SpellIconFileDataID = icd.DataFileID
+        WHERE sn.`Name` = '{actual_name}'
+          AND sco.`SpellClassSet` IN (3, 4, 5, 6, 7, 8, 9, 10, 11, 15)
+          AND sp.`Description` IS NOT NULL
+          AND sp.`Description` != ''
+        ORDER BY LENGTH(sp.`Description`) DESC, sn.ID ASC
+        LIMIT 1
+    """, raw=True)
+
+    if not result:
+        return f"Could not find spell: {query}"
+
+    row = result[0]
+    spell_id = row["ID"]
+    description = row["Description"]
+    icon = row["IconName"]
+
+    conn = get_web_connection()
+    try:
+        with conn.cursor() as cursor:
+            description = resolve_single_spell_description(spell_id, description, cursor)
+    finally:
+        conn.close()
+
+    display_name = actual_name.strip('"')
+
+    intro = spell_intro_chain.invoke({})
+    return f"{intro}\nSPELL:{icon}|{display_name}|{description}"
+
 tools = [
     list_characters_by_class,
     list_characters_by_race,
@@ -260,8 +324,5 @@ tools = [
     calculate_arena_points,
     get_character_armory_url,
     get_arena_leaderboards_url,
+    get_spell_description,
 ]
-
-if __name__ == "__main__":
-    result = list_characters_by_race.invoke({"race_name": "BELF"})
-    print(result)
