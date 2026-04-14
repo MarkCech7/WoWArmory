@@ -135,7 +135,7 @@ def _fetch_spell_data(cursor, spell_ids: set[int]) -> dict:
             se.EffectBasePoints,
             se.EffectDieSides,
             COALESCE(sr.Radius, 0) AS Radius
-        FROM web.spell_effect AS se
+        FROM web.v_spell_effect AS se
         LEFT JOIN web.spell_radius AS sr ON sr.ID = se.EffectRadiusIndex1
         WHERE se.SpellID IN ({ids_sql})
         ORDER BY se.SpellID, se.EffectIndex
@@ -150,16 +150,16 @@ def _fetch_spell_data(cursor, spell_ids: set[int]) -> dict:
     # SpellAuraOptions: stack count ($u token)
     cursor.execute(f"""
         SELECT SpellID, CumulativeAura
-        FROM web.spell_aura_options
+        FROM web.v_spell_aura_options
         WHERE SpellID IN ({ids_sql})
     """)
     for row in cursor.fetchall():
         data[row["SpellID"]]["cumulative_aura"] = row["CumulativeAura"]
-    
+
     # SpellTargetRestrictions: max targets ($i token)
     cursor.execute(f"""
         SELECT SpellID, MaxTargets
-        FROM web.spell_target_restrictions
+        FROM web.v_spell_target_restrictions
         WHERE SpellID IN ({ids_sql})
     """)
     for row in cursor.fetchall():
@@ -168,7 +168,7 @@ def _fetch_spell_data(cursor, spell_ids: set[int]) -> dict:
     # SpellMisc + SpellDuration: duration ($d token)
     cursor.execute(f"""
         SELECT sm.SpellID, sd.Duration AS duration_ms
-        FROM web.spell_misc AS sm
+        FROM web.v_spell_misc AS sm
         LEFT JOIN web.spell_duration AS sd ON sd.ID = sm.DurationIndex
         WHERE sm.SpellID IN ({ids_sql})
     """)
