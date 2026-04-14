@@ -1,3 +1,5 @@
+import re
+
 CLASS_NAMES = {
     1: "Warrior",
     2: "Paladin",
@@ -55,7 +57,8 @@ RACE_NAMES = {
 ALLIANCE_RACES = {1, 3, 4, 7, 11}  # Human, Dwarf, Night Elf, Gnome, Draenei
 HORDE_RACES = {2, 5, 6, 8, 10}     # Orc, Undead, Tauren, Troll, Blood Elf
 GEAR_SLOTS = {0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17}
-TWO_HAND_INVENTORY_TYPE = {17} 
+TWO_HAND_INVENTORY_TYPE = {17}
+LOWERCASE_WORDS = {"of", "the", "and", "in", "a", "an", "to"}
 
 def get_class_name(class_id: int) -> str:
     return CLASS_NAMES.get(class_id, "")
@@ -89,3 +92,218 @@ def compute_average_item_level(equipped_items: list[dict]) -> float:
         total += two_hander["item_level"]
 
     return int(total / len(GEAR_SLOTS))
+
+# Matches tokens like:
+#   $71905s1   $71904a1   $73422d   $71905u   $/1000;s1   $s2
+# Groups: (divisor|None, spell_id|"", token_type, effect_index|"")
+# Matches arithmetic expression tokens like ${8-1}, ${10+2}, ${4*3}
+_TOKEN_RE = re.compile(r'\$(?:\/(\d+);)?(\d*)([suadmi])(\d*)')
+
+
+def _extract_spell_ids(descriptions: list[str]) -> set[int]:
+    ids = set()
+
+    for desc in descriptions:
+        if not desc:
+            continue
+
+        for m in _TOKEN_RE.finditer(desc):
+            spell_id_str = m.group(2)
+
+            if spell_id_str:
+                ids.add(int(spell_id_str))
+    
+    return ids
+
+
+def _fetch_spell_data(cursor, spell_ids: set[int]) -> dict:
+    if not spell_ids:
+        return {}
+
+    ids_sql = ",".join(str(i) for i in spell_ids)
+    data: dict[int, dict] = {
+        sid: {"effects": {}, "cumulative_aura": 0, "duration_ms": 0, "max_targets": 0}
+        for sid in spell_ids
+    }
+
+    # SpellEffect: base points, die sides, radius
+    # EffectIndex is 0-based in DB2; tokens are 1-based
+    cursor.execute(f"""
+        SELECT
+            se.SpellID,
+            se.EffectIndex,
+            se.EffectBasePoints,
+            se.EffectDieSides,
+            COALESCE(sr.Radius, 0) AS Radius
+        FROM web.spell_effect AS se
+        LEFT JOIN web.spell_radius AS sr ON sr.ID = se.EffectRadiusIndex1
+        WHERE se.SpellID IN ({ids_sql})
+        ORDER BY se.SpellID, se.EffectIndex
+    """)
+    for row in cursor.fetchall():
+        data[row["SpellID"]]["effects"][row["EffectIndex"] + 1] = {
+            "base_points": row["EffectBasePoints"],
+            "die_sides":   row["EffectDieSides"],
+            "radius":      row["Radius"],
+        }
+
+    # SpellAuraOptions: stack count ($u token)
+    cursor.execute(f"""
+        SELECT SpellID, CumulativeAura
+        FROM web.spell_aura_options
+        WHERE SpellID IN ({ids_sql})
+    """)
+    for row in cursor.fetchall():
+        data[row["SpellID"]]["cumulative_aura"] = row["CumulativeAura"]
+    
+    # SpellTargetRestrictions: max targets ($i token)
+    cursor.execute(f"""
+        SELECT SpellID, MaxTargets
+        FROM web.spell_target_restrictions
+        WHERE SpellID IN ({ids_sql})
+    """)
+    for row in cursor.fetchall():
+        data[row["SpellID"]]["max_targets"] = row["MaxTargets"]
+
+    # SpellMisc + SpellDuration: duration ($d token)
+    cursor.execute(f"""
+        SELECT sm.SpellID, sd.Duration AS duration_ms
+        FROM web.spell_misc AS sm
+        LEFT JOIN web.spell_duration AS sd ON sd.ID = sm.DurationIndex
+        WHERE sm.SpellID IN ({ids_sql})
+    """)
+    for row in cursor.fetchall():
+        data[row["SpellID"]]["duration_ms"] = row["duration_ms"] or 0
+
+    return data
+
+
+def _format_duration(ms: int) -> str:
+    seconds = abs(ms) // 1000
+
+    if seconds == 0:
+        return "0 sec"
+    
+    if seconds % 60 == 0:
+        return f"{seconds // 60} min"
+
+    return f"{seconds} sec"
+
+
+def _resolve_token(
+    divisor: int,
+    spell_id: int | None,
+    token_type: str,
+    effect_idx: int,
+    spell_data: dict,
+    current_spell_id: int | None,
+) -> str:
+    sid = spell_id if spell_id is not None else current_spell_id
+
+    if sid is None or sid not in spell_data:
+        return "?"
+
+    entry = spell_data[sid]
+
+    if token_type == "s":
+        effect = entry["effects"].get(effect_idx)
+
+        if effect is None:
+            return "?"
+        
+        base = effect["base_points"]
+        die  = effect["die_sides"]
+
+        if die > 1:
+            # Range display: (base+1) to (base+die)
+            lo = abs(base + 1) // divisor
+            hi = abs(base + die) // divisor
+            return f"{lo} to {hi}"
+        else:
+            # die == 0 or 1: displayed value = base + die
+            # abs() because DB stores reductions as negatives; tooltip text carries the meaning
+            return str(abs(base + die) // divisor)
+
+    elif token_type == "m":
+        # Minimum value — EffectBasePoints without die
+        effect = entry["effects"].get(effect_idx)
+
+        if effect is None:
+            return "?"
+
+        return str(abs(effect["base_points"]) // divisor)
+
+    elif token_type == "u":
+        return str(entry["cumulative_aura"] // divisor)
+    
+    elif token_type == "i":
+        return str(entry["max_targets"] // divisor)
+
+    elif token_type == "a":
+        effect = entry["effects"].get(effect_idx)
+
+        if effect is None:
+            return "?"
+        
+        return str(int(effect["radius"]) // divisor)
+
+    elif token_type == "d":
+        return _format_duration(entry["duration_ms"] // divisor if divisor > 1 else entry["duration_ms"])
+
+    return "?"
+
+
+def resolve_spell_descriptions(items: list[dict], cursor) -> None:
+    descriptions = [item.get("Description") or item.get("description") or "" for item in items]
+    spell_ids = _extract_spell_ids(descriptions)
+
+    for item in items:
+        sid = item.get("spell_id")
+        if sid:
+            spell_ids.add(int(sid))
+
+    if not spell_ids:
+        return
+
+    spell_data = _fetch_spell_data(cursor, spell_ids)
+
+    for item in items:
+        raw = item.get("Description") or item.get("description")
+        if not raw:
+            continue
+
+        current_spell_id: int | None = item.get("spell_id")
+
+        def replace_token(m: re.Match) -> str:
+            divisor_str, spell_id_str, token_type, idx_str = m.groups()
+            return _resolve_token(
+                divisor          = int(divisor_str) if divisor_str else 1,
+                spell_id         = int(spell_id_str) if spell_id_str else None,
+                token_type       = token_type,
+                effect_idx       = int(idx_str) if idx_str else 1,
+                spell_data       = spell_data,
+                current_spell_id = current_spell_id,
+            )
+
+        resolved = _TOKEN_RE.sub(replace_token, raw)
+
+        def resolve_inner(m: re.Match) -> str:
+            inner = m.group(1)
+            inner = _TOKEN_RE.sub(replace_token, inner)
+            try:
+                return str(int(eval(inner)))
+            except:
+                return m.group(0)
+
+        resolved = re.sub(r'\$\{([^}]+)\}', resolve_inner, resolved)
+
+        if "Description" in item:
+            item["Description"] = resolved
+        else:
+            item["description"] = resolved
+
+def resolve_single_spell_description(spell_id: int, description: str, cursor) -> str:
+    item = {"spell_id": spell_id, "description": description}
+    resolve_spell_descriptions([item], cursor)
+
+    return item["description"]
