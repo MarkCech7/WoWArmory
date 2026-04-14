@@ -49,6 +49,27 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 }
 
 function renderMessageContent(content: string) {
+  if (content.includes("\nSPELL:")) {
+    const [intro, spellLine] = content.split("\nSPELL:");
+    const [icon, name, description] = spellLine.split("|");
+
+    return (
+      <div className="flex flex-col gap-2">
+        <span>{intro}</span>
+        <div>
+          {icon && icon !== "null" && (
+            <img
+              src={`/app/assets/icons/${icon}.png`}
+              className="w-[17px] h-[17px] rounded border border-gray-600 float-left mr-1 mt-[2px]"
+            />
+          )}
+          <span className="text-armory-spell-name font-bold">{name} </span>
+          <span>{description}</span>
+        </div>
+      </div>
+    );
+  }
+
   const sanitized = xss(content, {
     whiteList: {
       a: ["href", "target", "title"],
