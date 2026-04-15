@@ -268,7 +268,8 @@ def get_spell_description(query: str) -> str:
 
     name_result = query_web_db(f"""
         SELECT `Name` FROM web.spell_name
-        WHERE LOWER(`Name`) = LOWER('{query}')
+        WHERE LOWER(`Name`) = LOWER('"{query}"')
+        OR LOWER(`Name`) = LOWER('{query}')
         LIMIT 1
     """, raw=True)
 
@@ -328,5 +329,5 @@ tools = [
 ]
 
 if __name__ == "__main__":
-    loc = get_spell_description.invoke({"query": "Bladestorm"})
+    loc = get_spell_description.invoke({"query": "Curse of Agony"})
     print(loc)
