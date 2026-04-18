@@ -6,8 +6,6 @@
 /build/
 
 /src/
-app/assets/videos/
-app/assets/icons/
 app/assets
 
 backend/venv/
