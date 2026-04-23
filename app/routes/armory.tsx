@@ -38,6 +38,8 @@ import {
   StatSection,
   sanitizeStat,
 } from "~/components/stats";
+import TalentTree from "~/components/talents";
+import type { TalentTab, Glyph } from "~/components/talents";
 
 type SlotData = Route.ComponentProps["loaderData"]["equipped_items"][number];
 type SetSpell = {
@@ -500,6 +502,8 @@ export default function Armory(props: Route.ComponentProps) {
     item_set_data,
     average_item_level,
     char_skills,
+    talent_tabs,
+    glyphs,
   } = props.loaderData as {
     equipped_items: EquippedItem[];
     char_info: any;
@@ -507,6 +511,8 @@ export default function Armory(props: Route.ComponentProps) {
     item_set_data: Record<string, ItemSetInfo>;
     average_item_level: any;
     char_skills: any[];
+    talent_tabs: TalentTab[];
+    glyphs: Glyph[];
   };
 
   const { setCharacterName } = useChatContext();
@@ -529,7 +535,7 @@ export default function Armory(props: Route.ComponentProps) {
   }
 
   return (
-    <div className="max-w-[1300px] mx-auto gap-0.5 mt-5 h-[1600px] bg-content-dark-50 border-t rounded-2xl overflow-hidden">
+    <div className="max-w-[1300px] mx-auto gap-0.5 mt-5 h-[2400px] bg-content-dark-50 border-t rounded-2xl overflow-hidden">
       <ArmoryBackground raceId={char_info.race}>
         <div className="w-full pt-7 pl-10 pr-10">
           <div className="pb-4 border-b border-b-article-border">
@@ -571,7 +577,7 @@ export default function Armory(props: Route.ComponentProps) {
                   <span className="text-wow-gold">{char_info.guild_name}</span>
                 </div>
                 <div className="text-sm text-gray-400 whitespace-nowrap mb-2">
-                  (Average Item Level)
+                  Average Item Level
                 </div>
               </div>
             </div>
@@ -949,6 +955,11 @@ export default function Armory(props: Route.ComponentProps) {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      <div className="px-10 py-[26px]">
+        <div className="w-full border-t border-t-article-border pb-[1.625rem] text-[0.781rem]">
+          <TalentTree talentTabs={talent_tabs ?? []} glyphs={glyphs ?? []} />
         </div>
       </div>
     </div>

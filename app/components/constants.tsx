@@ -32,26 +32,45 @@ export const itemClassMap: Record<string, string> = {
 };
 
 export const itemBorderColor = (quality: number) => {
+  const hover = "hover:brightness-118 transition-[filter] duration-150";
   switch (quality) {
     case 0:
-      return "border-gray-500 hover:shadow-[0_0_12px_var(--tw-gray-500)] shadow-gray-500";
+      return `border-gray-500 hover:shadow-[0_0_12px_var(--tw-gray-500)] shadow-gray-500 ${hover}`;
     case 1:
-      return "border-wow-common hover:shadow-[0_0_12px_var(--tw-white)] shadow-white";
+      return `border-wow-common hover:shadow-[0_0_12px_var(--tw-white)] shadow-white ${hover}`;
     case 2:
-      return "border-wow-uncommon hover:shadow-[0_0_12px_var(--tw-green-500)] shadow-green-500";
+      return `border-wow-uncommon hover:shadow-[0_0_12px_var(--tw-green-500)] shadow-green-500 ${hover}`;
     case 3:
-      return "border-wow-rare hover:shadow-[0_0_12px_var(--tw-blue-500)] shadow-blue-500";
+      return `border-wow-rare hover:shadow-[0_0_12px_var(--tw-blue-500)] shadow-blue-500 ${hover}`;
     case 4:
-      return "border-wow-epic hover:shadow-[0_0_12px_var(--tw-purple-500)] shadow-purple-500"; //bf63fe
+      return `border-wow-epic hover:shadow-[0_0_12px_var(--tw-purple-500)] shadow-purple-500 ${hover}`;
     case 5:
-      return "border-wow-legendary hover:shadow-[0_0_12px_var(--tw-orange-500)] shadow-orange-500";
+      return `border-wow-legendary hover:shadow-[0_0_12px_var(--tw-orange-500)] shadow-orange-500 ${hover}`;
     case 6:
-      return "border-red-500 hover:shadow-[0_0_12px_var(--tw-red-500)] shadow-red-500";
+      return `border-red-500 hover:shadow-[0_0_12px_var(--tw-red-500)] shadow-red-500 ${hover}`;
     case 7:
-      return "border-yellow-500 hover:shadow-[0_0_12px_var(--tw-yellow-500)] shadow-yellow-500";
+      return `border-yellow-500 hover:shadow-[0_0_12px_var(--tw-yellow-500)] shadow-yellow-500 ${hover}`;
     default:
       return "";
   }
+};
+
+export const talentBorderColor = (isMax: boolean, isPartial: boolean) => {
+  const hover =
+    "hover:brightness-118 transition-[filter,box-shadow] duration-150";
+  if (isMax)
+    return `border-[#f8c000] hover:shadow-[0_0_12px_#f8c000] shadow-[0_0_4px_rgba(248,192,0,0.5)] ${hover}`;
+  if (isPartial)
+    return `border-[#22c55e] hover:shadow-[0_0_12px_#22c55e] ${hover}`;
+  return "border-[#3a3020] hover:shadow-[0_0_8px_rgba(160,120,50,0.5)] hover:brightness-98 transition-[filter,box-shadow] duration-150";
+};
+
+export const glyphBorderColor = (type: "major" | "minor") => {
+  const hover =
+    "hover:brightness-118 transition-[filter,box-shadow] duration-150";
+  if (type === "major")
+    return `border-[#f8c000]/50 hover:shadow-[0_0_7px_#f8a500] shadow-[0_0_4px_rgba(248,192,0,0.5)] ${hover}`;
+  return `border-[#60a5fa]/50 hover:shadow-[0_0_7px_#60a5fa] shadow-[0_0_4px_rgba(248,192,0,0.5)] ${hover}`;
 };
 
 export const getQualityTextColor = (quality: number) => {
