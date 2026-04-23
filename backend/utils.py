@@ -141,14 +141,13 @@ def _fetch_spell_data(cursor, spell_ids: set[int]) -> dict:
         ORDER BY se.SpellID, se.EffectIndex
     """)
     for row in cursor.fetchall():
-        lol = data[row["SpellID"]]["effects"][row["EffectIndex"] + 1] = {
+        data[row["SpellID"]]["effects"][row["EffectIndex"] + 1] = {
             "base_points":          row["EffectBasePoints"],
             "die_sides":            row["EffectDieSides"],
             "radius":               row["Radius"],
             "effect_aura_period":   row["EffectAuraPeriod"],
         }
 
-    print(lol)
     # ProcChance + ProcCharges from or spell_aura_options
     cursor.execute(f"""
         SELECT SpellID, ProcChance, ProcCharges
