@@ -43,6 +43,7 @@ character_not_found_chain = non_existing_character_prompt | llm | parser
 arena_leaderboards_chain = arena_leaderboards_prompt | llm | parser
 spell_intro_chain = spell_intro_prompt | llm | parser
 
+
 @tool
 def list_characters_by_class(class_name: str) -> str:
     """
@@ -58,10 +59,17 @@ def list_characters_by_class(class_name: str) -> str:
     if class_id is None:
          return f"Unknown class '{class_name}'."
     
-    count = query_web_db(f"SELECT COUNT(*) as count FROM web.characters_public WHERE class = {class_id}")
-    characters = query_web_db(f"SELECT name FROM web.characters_public WHERE class = {class_id} LIMIT 20")
+    count = query_web_db(
+        "SELECT COUNT(*) as count FROM web.characters_public WHERE class = %s",
+        params=(class_id,)
+    )
+    characters = query_web_db(
+        "SELECT name FROM web.characters_public WHERE class = %s LIMIT 20",
+        params=(class_id,)
+    )
 
     return f"{class_name} count:\n{count}\n\n{class_name} characters:\n{characters}"
+
 
 @tool
 def list_characters_by_race(race_name: str) -> str:
@@ -87,10 +95,17 @@ def list_characters_by_race(race_name: str) -> str:
     if race_id is None:
         return f"Unknown race '{race_name}'. Valid races are: {', '.join(RACE_NAMES.values())}"
 
-    count = query_web_db(f"SELECT COUNT(*) as count FROM web.characters_public WHERE race = {race_id}")
-    characters = query_web_db(f"SELECT name FROM web.characters_public WHERE race = {race_id} LIMIT 20")
+    count = query_web_db(
+        "SELECT COUNT(*) as count FROM web.characters_public WHERE race = %s",
+        params=(race_id,)
+    )
+    characters = query_web_db(
+        "SELECT name FROM web.characters_public WHERE race = %s LIMIT 20",
+        params=(race_id,)
+    )
 
     return f"{normalized} count:\n{count}\n\n{normalized} characters:\n{characters}"
+
 
 @tool
 def list_characters_by_level(query: str) -> str:
@@ -100,18 +115,24 @@ def list_characters_by_level(query: str) -> str:
     Input must be a string like "75", "above 65", "exactly 80".
     """
     query_lower = query.lower().strip()
+    level = int(''.join(filter(str.isdigit, query_lower)))
 
     if "above" in query_lower or "over" in query_lower or "higher" in query_lower or ">" in query_lower:
-        level = int(''.join(filter(str.isdigit, query_lower)))
-        sql = f"SELECT name, level FROM web.characters_public WHERE level > {level} LIMIT 20"
+        return query_web_db(
+            "SELECT name, level FROM web.characters_public WHERE level > %s LIMIT 20",
+            params=(level,)
+        )
     elif "below" in query_lower or "under" in query_lower or "lower" in query_lower or "<" in query_lower:
-        level = int(''.join(filter(str.isdigit, query_lower)))
-        sql = f"SELECT name, level FROM web.characters_public WHERE level < {level} LIMIT 20"
+        return query_web_db(
+            "SELECT name, level FROM web.characters_public WHERE level < %s LIMIT 20",
+            params=(level,)
+        )
     else:
-        level = int(''.join(filter(str.isdigit, query_lower)))
-        sql = f"SELECT name, level FROM web.characters_public WHERE level = {level} LIMIT 20"
-    
-    return query_web_db(sql)
+        return query_web_db(
+            "SELECT name, level FROM web.characters_public WHERE level = %s LIMIT 20",
+            params=(level,)
+        )
+
 
 @tool
 def get_faction_characters(query: str) -> str:
@@ -121,24 +142,26 @@ def get_faction_characters(query: str) -> str:
     Input must be a faction string: "horde" or "alliance"
     """
     query_lower = query.lower()
-    alliance_ids = ",".join(str(r) for r in ALLIANCE_RACES)
-    horde_ids = ",".join(str(r) for r in HORDE_RACES)
+    alliance_ids = tuple(ALLIANCE_RACES)
+    horde_ids = tuple(HORDE_RACES)
+
+    def get_count(ids: tuple) -> int:
+        result = query_web_db(
+            "SELECT COUNT(*) as count FROM web.characters_public WHERE race IN %s",
+            params=(ids,),
+            raw=True
+        )
+        return result[0]["count"] if result else 0
 
     if "alliance" in query_lower and "horde" not in query_lower:
-        result = query_web_db(f"SELECT COUNT(*) as count FROM web.characters_public WHERE race IN ({alliance_ids})")
+        return f"Alliance: {get_count(alliance_ids)}"
 
-        return f"Alliance: {result}"
-    
     elif "horde" in query_lower and "alliance" not in query_lower:
-        result = query_web_db(f"SELECT COUNT(*) as count FROM web.characters_public WHERE race IN ({horde_ids})")
+        return f"Horde: {get_count(horde_ids)}"
 
-        return f"Horde: {result}"
-    
     else:
-        alliance = query_web_db(f"SELECT COUNT(*) as count FROM web.characters_public WHERE race IN ({alliance_ids})")
-        horde = query_web_db(f"SELECT COUNT(*) as count FROM web.characters_public WHERE race IN ({horde_ids})")
-
-        return f"Alliance: {alliance}\nHorde: {horde}"
+        return f"Alliance: {get_count(alliance_ids)}\nHorde: {get_count(horde_ids)}"
+    
 
 @tool
 def get_list_of_guilds(query: str) -> str:
@@ -151,22 +174,18 @@ def get_list_of_guilds(query: str) -> str:
 
     return f"Total guilds:\n{count}\n\nGuild list:\n{guilds}"
 
+
 @tool
 def get_characters_with_highest_hk(limit: int = 10) -> str:
     """
-    Find a character with most honorable kills  and return its name.
+    Find a character with most honorable kills and return its name.
     Use this when user asks who has the most kills or highest HK count.
     """
-    result = query_web_db(f"""
-        SELECT 
-            name, 
-            totalKills
-        FROM web.characters_public
-        ORDER BY totalKills DESC
-        LIMIT {limit}
-    """)
+    return query_web_db(
+        "SELECT name, totalKills FROM web.characters_public ORDER BY totalKills DESC LIMIT %s",
+        params=(limit,)
+    )
 
-    return result
 
 @tool
 def search_articles_knowledge_base(query: str) -> str:
@@ -179,6 +198,7 @@ def search_articles_knowledge_base(query: str) -> str:
     """
     return similarity_search_articles(query)
 
+
 @tool  
 def search_characters_knowledge_base(query: str) -> str:
     """
@@ -189,6 +209,7 @@ def search_characters_knowledge_base(query: str) -> str:
     Input must be a plain text search query string, for example: "Provimsen items"
     """
     return similarity_search_characters(query)
+
 
 @tool
 def calculate_arena_points(rating: int) -> str:
@@ -221,6 +242,7 @@ def calculate_arena_points(rating: int) -> str:
         f"{rating} | {two_points} | {three_points} | {five_points}"
     )
 
+
 @tool(return_direct=True)
 def get_character_armory_url(name: str) -> str:
     """
@@ -229,11 +251,10 @@ def get_character_armory_url(name: str) -> str:
     Example: "show me Provimsen's armory" or "Show me gear of player named Fegedin"
     Input must be the character name string.
     """
-    result = query_web_db(f"""
-        SELECT name FROM web.characters_public 
-        WHERE name = '{name}' 
-        LIMIT 1
-    """)
+    result = query_web_db(
+        "SELECT name FROM web.characters_public WHERE name = %s LIMIT 1",
+        params=(name,)
+    )
 
     if not result or result == "No results found.":
         phrase = character_not_found_chain.invoke({"name": name})
@@ -243,6 +264,7 @@ def get_character_armory_url(name: str) -> str:
     phrase = character_found_chain.invoke({"name": name})
 
     return f"{phrase}\nTo view {name}'s armory click <a href=\"/armory/{name}\" target=\"_blank\">here</a>."
+
 
 @tool(return_direct=True)
 def get_arena_leaderboards_url(query: str) -> str:
@@ -255,6 +277,7 @@ def get_arena_leaderboards_url(query: str) -> str:
      
     return f"{phrase}\nYou can visit leaderboards here: <a href=\"/leaderboards/2v2\" target=\"_blank\">2v2 Arena Ladder</a>, <a href=\"/leaderboards/3v3\" target=\"_blank\">3v3 Arena Ladder</a>"
 
+
 @tool(return_direct=True)
 def get_spell_description(query: str) -> str:
     """
@@ -266,32 +289,31 @@ def get_spell_description(query: str) -> str:
     for word in ["ability", "spell", "description"]:
         query = query.replace(word, "").strip()
 
-    name_result = query_web_db(f"""
-        SELECT `Name` FROM web.spell_name
-        WHERE LOWER(`Name`) = LOWER('"{query}"')
-        OR LOWER(`Name`) = LOWER('{query}')
-        LIMIT 1
-    """, raw=True)
+    name_result = query_web_db(
+        "SELECT `Name` FROM web.spell_name WHERE LOWER(`Name`) = LOWER(%s) OR LOWER(`Name`) = LOWER(%s) LIMIT 1",
+        params=(f'"{query}"', query),
+        raw=True
+    )
 
     if not name_result:
         return f"Could not find spell: {query}"
 
     actual_name = name_result[0]["Name"]
 
-    result = query_web_db(f"""
+    result = query_web_db("""
         SELECT sn.ID, sp.`Description`, icd.`IconName`
         FROM web.spell_name AS sn
         LEFT JOIN web.spell AS sp ON sn.ID = sp.ID
         LEFT JOIN web.spell_class_options AS sco ON sn.ID = sco.SpellID
         LEFT JOIN web.spell_misc AS sm ON sn.ID = sm.SpellID
         LEFT JOIN web.icon_data as icd ON sm.SpellIconFileDataID = icd.DataFileID
-        WHERE sn.`Name` = '{actual_name}'
-          AND sco.`SpellClassSet` IN (3, 4, 5, 6, 7, 8, 9, 10, 11, 15)
-          AND sp.`Description` IS NOT NULL
-          AND sp.`Description` != ''
+        WHERE sn.`Name` = %s
+        AND sco.`SpellClassSet` IN (3, 4, 5, 6, 7, 8, 9, 10, 11, 15)
+        AND sp.`Description` IS NOT NULL
+        AND sp.`Description` != ''
         ORDER BY LENGTH(sp.`Description`) DESC, sn.ID ASC
         LIMIT 1
-    """, raw=True)
+    """, params=(actual_name,), raw=True)
 
     if not result:
         return f"Could not find spell: {query}"
@@ -327,7 +349,3 @@ tools = [
     get_arena_leaderboards_url,
     get_spell_description,
 ]
-
-if __name__ == "__main__":
-    loc = get_spell_description.invoke({"query": "Curse of Agony"})
-    print(loc)

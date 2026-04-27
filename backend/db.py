@@ -9,11 +9,11 @@ PORT = int(os.getenv("DB_PORT"))
 USER = os.getenv("DB_USER")
 PASSWORD = os.getenv("DB_PASSWORD")
     
-def query_web_db(sql: str, raw: bool = False) -> str | list[dict]:
+def query_web_db(sql: str, params: tuple = (), raw: bool = False) -> str | list[dict]:
     try:
         conn = get_web_connection()
         with conn.cursor() as cursor:
-            cursor.execute(sql)
+            cursor.execute(sql, params)
             rows = cursor.fetchall()
 
             if not rows:
