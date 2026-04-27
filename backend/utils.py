@@ -59,6 +59,7 @@ HORDE_RACES = {2, 5, 6, 8, 10}     # Orc, Undead, Tauren, Troll, Blood Elf
 GEAR_SLOTS = {0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17}
 TWO_HAND_INVENTORY_TYPE = {17}
 LOWERCASE_WORDS = {"of", "the", "and", "in", "a", "an", "to"}
+CURRENT_MAX_LEVEL = 80
 
 def get_class_name(class_id: int) -> str:
     return CLASS_NAMES.get(class_id, "")

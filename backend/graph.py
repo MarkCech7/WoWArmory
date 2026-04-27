@@ -1,10 +1,11 @@
 from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END
 from langchain_ollama import ChatOllama
-from langchain_core.messages import SystemMessage, ToolMessage
+from langchain_core.messages import SystemMessage, ToolMessage, AIMessage
 from typing import TypedDict, Annotated
 from tools import tools
 import os, operator
+from utils import CLASS_NAMES, RACE_NAMES, CURRENT_MAX_LEVEL
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
@@ -70,6 +71,113 @@ STRICT RULES:
 CONTEXT RULE:
 If a system message states the user is viewing a character's armory page, that character is the subject of all questions. Pass their name to search_characters_knowledge_base immediately.
 """
+
+TOOL_VALIDATORS: dict[str, callable] = {}
+
+def validator(tool_name: str):
+    def decorator(fn):
+        TOOL_VALIDATORS[tool_name] = fn
+
+        return fn
+    
+    return decorator
+
+@validator("list_characters_by_level")
+def validate_level(args: dict) -> str | None:
+    query = str(args.get("query", ""))
+
+    if not any(c.isdigit() for c in query):
+        return f"Level query must contain a number, got: '{query}'"
+
+    digits = ''.join(filter(str.isdigit, query))
+    level = int(digits)
+
+    if level < 1:
+        return f"Level must be at least 1, got: {level}"
+    
+    if level > CURRENT_MAX_LEVEL:
+        return f"Level {level} exceeds current maximum level {CURRENT_MAX_LEVEL}"
+    
+    return None
+
+@validator("calculate_arena_points")
+def validate_arena_points(args: dict) -> str | None:
+    try:
+        rating = int(args.get("rating", 0))
+
+        if rating < 0:
+            return f"Rating cannot be negative, got: {rating}"
+        
+        if rating > 3600:
+            return f"Rating {rating} is unrealistically high — maximum is around 3600"
+        
+    except (ValueError, TypeError):
+        return f"Rating must be an integer, got: '{args.get('rating')}'"
+    
+    return None
+
+@validator("list_characters_by_class")
+def validate_class(args: dict) -> str | None:
+    class_name = args.get("class_name", "").strip().lower()
+    valid = [n.lower() for n in CLASS_NAMES.values()]
+
+    if class_name not in valid:
+        return f"Unknown class '{args.get('class_name')}'. Valid: {', '.join(CLASS_NAMES.values())}"
+    
+    return None
+
+@validator("list_characters_by_race")
+def validate_race(args: dict) -> str | None:
+    race_name = args.get("race_name", "").strip().lower()
+    aliases = {"nelf", "nightelf", "belf", "bloodelf"}
+    valid = [n.lower() for n in RACE_NAMES.values()]
+
+    if race_name not in valid and race_name not in aliases:
+        return f"Unknown race '{args.get('race_name')}'. Valid: {', '.join(RACE_NAMES.values())}"
+    
+    return None
+
+@validator("get_character_armory_url")
+def validate_character_name(args: dict) -> str | None:
+    name = args.get("name", "").strip()
+
+    if not name:
+        return "Character name cannot be empty"
+    
+    if len(name) < 2 or len(name) > 24:
+        return f"Character name '{name}' has invalid length (must be 2-24 characters)"
+    
+    return None
+
+def validate_node(state: AgentState):
+    last = state["messages"][-1]
+    
+    if not hasattr(last, "tool_calls") or not last.tool_calls:
+        return {"messages": []}
+    
+    errors = []
+    valid_calls = []
+    
+    for call in last.tool_calls:
+        validator_fn = TOOL_VALIDATORS.get(call["name"])
+
+        if validator_fn:
+            error = validator_fn(call["args"])
+
+            if error:
+                print(f"  --> Validation failed for {call['name']}: {error}")
+                errors.append(error)
+                continue
+        valid_calls.append(call)
+    
+    if errors:
+        last.tool_calls = valid_calls
+        error_msg = " | ".join(errors)
+        return {
+            "messages": [AIMessage(content=f"I couldn't process that request: {error_msg}")]
+        }
+    
+    return {"messages": []}
 
 def agent_node(state: AgentState):
     messages = [SystemMessage(content=SYSTEM_PROMPT)] + state["messages"]
@@ -137,13 +245,27 @@ def should_continue(state: AgentState):
 def build_graph():
     graph = StateGraph(AgentState)
     graph.add_node("agent", agent_node)
+    graph.add_node("validate", validate_node)
     graph.add_node("tools", safe_tool_node)
     graph.set_entry_point("agent")
     
-    # agent decides whether to call tools or end
     graph.add_conditional_edges(
         "agent",
         should_continue,
+        {
+            "tools": "validate",
+            END: END,
+        }
+    )
+
+    graph.add_conditional_edges(
+        "validate",
+        lambda state: (
+            END if state["messages"] and
+            state["messages"][-1].__class__.__name__ == "AIMessage" and
+            not getattr(state["messages"][-1], "tool_calls", None)
+            else "tools"
+        ),
         {
             "tools": "tools",
             END: END,
