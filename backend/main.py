@@ -1,12 +1,18 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from langchain_core.messages import HumanMessage, AIMessage
-from graph import app_graph
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+from graph import app_graph, llm
+from langchain_core.prompts import ChatPromptTemplate
 from rag import index_web_articles
 from contextlib import asynccontextmanager
 import uuid
 from routers import armory, leaderboards, auth
+from tools import parser
+
+MAX_HISTORY_MESSAGES = 10
+SUMMARIZE_BATCH = 4
+KEEP_RECENT_MESSAGES = 6 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -38,6 +44,47 @@ class ChatResponse(BaseModel):
     session_id: str
     tools_used: list[str]
 
+summarize_prompt = ChatPromptTemplate.from_template(
+    "Summarize the following conversation history concisely, preserving key facts like "
+    "character names, queries made, and answers given. Output only the summary, nothing else.\n\n"
+    "{history}"
+)
+
+summarize_chain = summarize_prompt | llm | parser
+
+
+def maybe_summarize_history(history: list) -> list:
+    non_summary = [m for m in history if not isinstance(m, SystemMessage)]
+    
+    if len(non_summary) < MAX_HISTORY_MESSAGES:
+        return history
+
+    # Only trigger when enough new messages have accumulated beyond KEEP_RECENT_MESSAGES
+    compressible = len(non_summary) - KEEP_RECENT_MESSAGES
+    if compressible < SUMMARIZE_BATCH:
+        return history
+
+    existing_summary = ""
+    if history and isinstance(history[0], SystemMessage):
+        existing_summary = history[0].content
+        history = history[1:]
+
+    old_messages = [m for m in history if not isinstance(m, SystemMessage)][:-KEEP_RECENT_MESSAGES]
+    recent_messages = [m for m in history if not isinstance(m, SystemMessage)][-KEEP_RECENT_MESSAGES:]
+
+    formatted = []
+    if existing_summary:
+        formatted.append(f"[Previous Summary]: {existing_summary}")
+
+    for m in old_messages:
+        role = m.__class__.__name__.replace("Message", "")
+        formatted.append(f"{role}: {m.content}")
+
+    history_text = "\n".join(formatted)
+    summary_text = summarize_chain.invoke({"history": history_text})
+
+    return [SystemMessage(content=f"[Conversation Summary]: {summary_text}")] + recent_messages
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     session_id = request.session_id or str(uuid.uuid4())
@@ -49,7 +96,10 @@ async def chat(request: ChatRequest):
     context = session["context"]
     history = session["history"]
 
+    history = maybe_summarize_history(history)
+    session["history"] = history
     message = request.message
+
     if context:
         message = f"{context} {request.message}"
 
@@ -75,18 +125,22 @@ async def chat(request: ChatRequest):
     ]
 
     if last.__class__.__name__ == "ToolMessage":
-        # return_direct tool - store as AIMessage so history stays clean
         last_reply = last.content
         synthetic_ai = AIMessage(content=last_reply)
         session["history"] = history + [synthetic_ai]
     else:
         last_reply = next(
             (m.content for m in reversed(updated_messages)
-             if m.__class__.__name__ == "AIMessage" and m.content),
+            if m.__class__.__name__ == "AIMessage" and m.content),
             ""
         )
-        session["history"] = updated_messages
+        session["history"] = [
+            m for m in updated_messages
+            if m.__class__.__name__ in ("HumanMessage", "AIMessage")
+            and m.content
+        ]
 
+    session["history"] = maybe_summarize_history(session["history"])
     sessions[session_id] = session
 
     return ChatResponse(

@@ -99,7 +99,7 @@ def similarity_search_articles(query: str, k: int = 3) -> str:
         f"[ARTICLE] {doc.page_content}" for doc in results
     ])
 
-def similarity_search_characters(query: str, k: int = 1) -> str:
+def similarity_search_characters(query: str, k: int = 5) -> str:
     results = characters_vectorstore.similarity_search(query, k=k)
 
     if not results:

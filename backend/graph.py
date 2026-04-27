@@ -24,6 +24,7 @@ llm = ChatOllama(
 llm_with_tools = llm.bind_tools(tools)
 
 SYSTEM_PROMPT = """You are a helpful AI assistant for a World of Warcraft private server.
+If a system message starts with [Conversation Summary], treat it as prior conversation context.
 
 You have access to 12 tools. You MUST call them — never answer from memory.
 
