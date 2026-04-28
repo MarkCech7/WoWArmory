@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, createContext, useContext } from "react";
+import { useState, useRef, useEffect, createContext, useContext } from "react";
 import xss from "xss";
 
 const API_URL = "http://localhost:8000";
@@ -41,6 +41,7 @@ const ChatContext = createContext<{
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [characterName, setCharacterName] = useState<string | undefined>();
+
   return (
     <ChatContext.Provider value={{ characterName, setCharacterName }}>
       {children}
@@ -98,11 +99,31 @@ export function useChatContext() {
 
 export default function Chat() {
   const { characterName } = useChatContext();
-  const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [open, setOpen] = useState(() =>
+    typeof window !== "undefined"
+      ? localStorage.getItem("chat_open") === "true"
+      : false,
+  );
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window === "undefined") return [];
+    const saved = localStorage.getItem("chat_messages");
+    return saved ? JSON.parse(saved) : [];
+  });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const sessionId = useRef<string | undefined>(undefined);
+  const sessionId = useRef<string | undefined>(
+    typeof window !== "undefined"
+      ? localStorage.getItem("chat_session_id") ?? undefined
+      : undefined,
+  );
+
+  useEffect(() => {
+    localStorage.setItem("chat_messages", JSON.stringify(messages));
+  }, [messages]);
+
+  useEffect(() => {
+    localStorage.setItem("chat_open", String(open));
+  }, [open]);
 
   const send = async () => {
     if (!input.trim()) return;
@@ -117,6 +138,7 @@ export default function Chat() {
         characterName ?? undefined,
       );
       sessionId.current = res.session_id;
+      localStorage.setItem("chat_session_id", res.session_id);
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: res.reply, toolsUsed: res.tools_used },
@@ -134,6 +156,8 @@ export default function Chat() {
   const reset = () => {
     if (sessionId.current) clearSession(sessionId.current);
     sessionId.current = undefined;
+    localStorage.removeItem("chat_session_id");
+    localStorage.removeItem("chat_messages");
     setMessages([]);
   };
 
