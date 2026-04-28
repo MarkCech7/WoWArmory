@@ -90,20 +90,24 @@ async def chat(request: ChatRequest):
     session_id = request.session_id or str(uuid.uuid4())
     session = sessions.get(session_id, {"history": [], "context": None})
 
-    if request.context:
+    if request.context and request.context != session.get("context"):
         session["context"] = request.context
+        context_msg = SystemMessage(
+            content=f"User is currently viewing armory page of character: '{request.context}'. "
+                    f"When asked about 'this character' or without naming one, "
+                    f"always use search_characters_knowledge_base with name '{request.context}'."
+        )
+        history = session["history"]
 
-    context = session["context"]
+        if history and isinstance(history[0], SystemMessage) and "armory page" in history[0].content:
+            history[0] = context_msg
+        else:
+            history.insert(0, context_msg)
+
     history = session["history"]
-
     history = maybe_summarize_history(history)
     session["history"] = history
-    message = request.message
-
-    if context:
-        message = f"{context} {request.message}"
-
-    history.append(HumanMessage(content=message))
+    history.append(HumanMessage(content=request.message))
     sessions[session_id] = session
 
     try:

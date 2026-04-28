@@ -114,9 +114,7 @@ export default function Chat() {
       const res = await sendMessage(
         userMsg,
         sessionId.current,
-        characterName
-          ? `When I say "this character" or ask about a character without naming one, I mean "${characterName}". Search for "${characterName}" specifically using search_characters_knowledge_base.`
-          : undefined,
+        characterName ?? undefined,
       );
       sessionId.current = res.session_id;
       setMessages((prev) => [
