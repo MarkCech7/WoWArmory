@@ -226,26 +226,47 @@ function ArmorSlot(props: {
         <div
           style={{
             display: "flex",
-            //alignItems: "center",
             gap: "0.3rem",
             height: "3.75rem",
             flexDirection: isLeft ? "row" : "row-reverse",
-            background: isLeft
-              ? "linear-gradient(to right, rgba(0,0,0,0.85), rgba(0,0,0,0.01))"
-              : "linear-gradient(to right, rgba(0,0,0,0.01), rgba(0,0,0,0.85))",
             minWidth: "19rem",
             fontSize: "0.781rem",
             padding: "0.25rem 0.25rem",
             boxSizing: "border-box",
+            position: "relative",
           }}
         >
+          <div
+            style={{
+              position: "absolute",
+              inset: isLeft ? "-7px -50px -7px -7px" : "-7px -7px -7px -50px",
+              background: isLeft
+                ? "radial-gradient(ellipse 95% 90% at 25% 50%, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.45) 40%, transparent 75%)"
+                : "radial-gradient(ellipse 95% 90% at 75% 50%, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.45) 40%, transparent 75%)",
+              borderRadius: isLeft
+                ? "35% 65% 60% 40% / 50% 35% 65% 50%"
+                : "65% 35% 40% 60% / 50% 65% 35% 50%",
+              filter: "blur(20px)",
+              zIndex: 6,
+              pointerEvents: "none",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: isLeft
+                ? "linear-gradient(to right, rgba(0,0,0,0.85), rgba(0,0,0,0.01))"
+                : "linear-gradient(to left, rgba(0,0,0,0.85), rgba(0,0,0,0.01))",
+              zIndex: 7,
+              pointerEvents: "none",
+            }}
+          />
           <Tooltip.Trigger asChild>
-            <div className="w-13 h-13 flex-shrink-0 relative">
-              <div
-                className={`flex items-center gap-2 ${
-                  isLeft ? "flex-col" : "flex-col-reverse"
-                }`}
-              ></div>
+            <div
+              className="w-13 h-13 flex-shrink-0 relative"
+              style={{ zIndex: 12 }}
+            >
               <div
                 style={{
                   backgroundImage: `url(/app/assets/icons/${iconToDisplay}.png)`,
@@ -275,6 +296,8 @@ function ArmorSlot(props: {
               justifyContent: "space-between",
               alignItems: isLeft ? "flex-start" : "flex-end",
               marginTop: "-0.2rem",
+              position: "relative",
+              zIndex: 11,
             }}
           >
             <span
@@ -284,7 +307,6 @@ function ArmorSlot(props: {
             >
               {itemName}
             </span>
-
             <span>
               {enchantments[0] ? (
                 <div className="text-wow-uncommon whitespace-nowrap [text-shadow:0_0_4px_black]">
