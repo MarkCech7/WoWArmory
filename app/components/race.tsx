@@ -148,7 +148,34 @@ export function ArmoryFaction(props: { raceId: number }) {
     src = hordeArmory;
     alt = "Horde";
   }
-  return <img className="w-16 h-18" src={src} alt={alt} />;
+
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        width: "2.6rem",
+        height: "1.2rem",
+        overflow: "visible",
+        position: "relative",
+        flexShrink: 0,
+      }}
+    >
+      <img
+        src={src}
+        alt={alt}
+        style={{
+          width: "2.2rem",
+          height: "2.4rem",
+          objectFit: "fill",
+          position: "absolute",
+          top: "50%",
+          right: "0%",
+          transform: "translateY(-50%)",
+        }}
+        className="brightness-125"
+      />
+    </span>
+  );
 }
 
 export function ArmoryFactionBackground(props: { raceId: number }) {

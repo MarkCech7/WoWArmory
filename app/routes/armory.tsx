@@ -571,25 +571,27 @@ export default function Armory(props: Route.ComponentProps) {
             </ul>
           </div>
         </div>
-        <div className="w-full max-w-[62.5rem] pt-2">
+        <div className="w-full max-w-[66rem] pt-2">
           {" "}
           {/*max-w-[60.625rem]*/}
           <div className="pt-2 pb-2">
             <div className="relative w-full">
-              <div className="absolute -ml-24 -mt-1">
-                <ArmoryFaction raceId={char_info.race} />
-              </div>
-              <div className="flex justify-between items-baseline">
-                <div className="text-3xl font-bold">{charName}</div>
-                <div className="whitespace-nowrap mt-[-2]">
+              <div className="relative w-full grid grid-cols-[1fr_auto] items-center">
+                <div className="text-3xl font-bold">
+                  <a
+                    className="hover:text-gray-200"
+                    href={`/armory/${char_info.name}`}
+                  >
+                    {charName}
+                  </a>
+                </div>
+                <div className="flex items-center whitespace-nowrap justify-end">
                   <span className="text-2xl font-extrabold">
                     {average_item_level} ilvl
                   </span>
-                  <span className="text-m"></span>
+                  <ArmoryFaction raceId={char_info.race} />
                 </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <div className="pb-2 font-bold text-lg">
+                <div className="font-bold text-lg">
                   <NameColor class={char_info.class_name}>
                     <span className="font-extrabold">{char_info.level}</span>{" "}
                     <span>{char_info.race_name}</span>{" "}
@@ -598,9 +600,9 @@ export default function Armory(props: Route.ComponentProps) {
                   </NameColor>{" "}
                   <span className="text-wow-gold">{char_info.guild_name}</span>
                 </div>
-                <div className="text-sm text-gray-400 whitespace-nowrap mb-2">
+                <span className="text-sm text-gray-200 whitespace-nowrap text-right">
                   Average Item Level
-                </div>
+                </span>
               </div>
             </div>
           </div>
