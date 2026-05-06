@@ -23,6 +23,8 @@ import alliance from "~/assets/faction/alliance.svg";
 import horde from "~/assets/faction/horde.svg";
 import allianceArmory from "~/assets/faction/armoryalliance.png";
 import hordeArmory from "~/assets/faction/armoryhorde.png";
+import allianceArmoryBackground from "~/assets/armory-bg/alliance_armory_bg.png";
+import hordeArmoryBackground from "~/assets/armory-bg/horde_armory_bg.png";
 
 export function CharRace(props: { raceId: number; gender: number }) {
   let src = "";
@@ -147,6 +149,19 @@ export function ArmoryFaction(props: { raceId: number }) {
     alt = "Horde";
   }
   return <img className="w-16 h-18" src={src} alt={alt} />;
+}
+
+export function ArmoryFactionBackground(props: { raceId: number }) {
+  if (
+    props.raceId === 1 ||
+    props.raceId === 3 ||
+    props.raceId === 4 ||
+    props.raceId === 7 ||
+    props.raceId === 11
+  ) {
+    return allianceArmoryBackground;
+  }
+  return hordeArmoryBackground;
 }
 
 /* faction

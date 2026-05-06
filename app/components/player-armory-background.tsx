@@ -1,20 +1,16 @@
-import human from "~/assets/armory-bg/human.png";
-import human2 from "~/assets/armory-bg/humanupd.png";
-import char from "~/assets/armory-bg/test4.png";
+import { ArmoryFactionBackground } from "~/components/race";
+import char from "~/assets/armory-bg/chartest2.png";
+import chare from "~/assets/armory-bg/chare.png";
 import type { ReactNode } from "react";
 
 export default function ArmoryBackground(props: {
   raceId: number;
   children: ReactNode;
 }) {
-  let bg = "";
-  switch (props.raceId) {
-    case 1:
-      bg = human2;
-  }
+  let bg = ArmoryFactionBackground(props);
   return (
     <div
-      className="text-white w-[1300px] flex overflow-hidden justify-center h-[790px] bg-no-repeat relative bg-[length:118%] bg-[position:48%_75%]"
+      className="text-white w-[1300px] flex overflow-hidden justify-center h-[790px] bg-no-repeat relative bg-[length:110%_120%] bg-[position:35%_90%]"
       style={{
         backgroundImage: `url(${bg})`,
       }}
@@ -38,7 +34,7 @@ export default function ArmoryBackground(props: {
 
         {/* TOP fade */}
         <div
-          className="absolute top-0 left-0 w-full h-[250px]"
+          className="absolute top-0 left-0 w-full h-[270px]"
           style={{
             background: "linear-gradient(to bottom, #1f1105, rgba(0,0,0,0.01))",
           }}
@@ -64,20 +60,24 @@ export default function ArmoryBackground(props: {
 }
 
 export function CharacterImage(props: { raceId: number }) {
-  let img = "";
+  let img = char;
   switch (props.raceId) {
     case 1:
       img = char;
+      break;
+    case 10:
+      img = chare;
+      break;
   }
   return (
     //<div className="absolute bottom-[150px] left-[185px] pointer-events-none flex justify-center items-end">
     //<div className="absolute bottom-[-75px] left-[45px] pointer-events-none flex justify-center items-end">
-    <div className="absolute bottom-[-75px] left-[95px] pointer-events-none flex justify-center items-end">
+    <div className="absolute bottom-[-86px] left-[82px] pointer-events-none flex justify-center items-end z-[9]">
       <img
         src={img}
         alt="Character"
         //className="w-[700px] h-[550px] object-contain"
-        className="w-[1200px] h-[950px] object-contain brightness-125"
+        className="w-[1150px] h-[920px] object-contain brightness-125"
       />
     </div>
   );
